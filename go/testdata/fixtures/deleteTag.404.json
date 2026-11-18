@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "DELETE",
+    "path": "/api/v1/projects/d4ac094e-aa12-4d7f-96ab-1ebb84162b30/tags/8ec93966-db51-4801-a143-26296a09c05c"
+  },
+  "status": 404,
+  "body": {
+    "reqId": "req-0PkiaHY9XlB5Ey",
+    "statusCode": 404,
+    "message": "Tag with ID '8ec93966-db51-4801-a143-26296a09c05c' not found",
+    "error": "NotFound"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/api/v1/auth/universal-auth/login",
+    "body": {
+      "clientId": "b2d6aef8-0bdb-48b9-9259-693a42085781",
+      "clientSecret": "<redacted>"
+    }
+  },
+  "status": 401,
+  "body": {
+    "reqId": "req-oXuJOqbuFQ1hLL",
+    "statusCode": 401,
+    "message": "This identity auth method is temporarily locked, please try again later",
+    "error": "UnauthorizedError"
+  }
+}
