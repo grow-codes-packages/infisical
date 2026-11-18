@@ -1,0 +1,58 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/api/v1/projects",
+    "body": {
+      "projectName": "SDK Test",
+      "projectDescription": "sdk",
+      "slug": "sdk-test"
+    }
+  },
+  "status": 200,
+  "body": {
+    "project": {
+      "id": "c94a6262-ca83-4bd6-adc5-273ebbf4f82f",
+      "name": "SDK Test",
+      "description": "sdk",
+      "type": "secret-manager",
+      "defaultProduct": null,
+      "slug": "sdk-test",
+      "autoCapitalization": false,
+      "orgId": "78dfe3cf-29a3-4804-9a70-68b26b775a4b",
+      "createdAt": "2026-11-18T20:13:59.186Z",
+      "updatedAt": "2026-11-18T20:13:59.186Z",
+      "version": 3,
+      "upgradeStatus": null,
+      "pitVersionLimit": 10,
+      "kmsCertificateKeyId": null,
+      "kmsSecretManagerKeyId": null,
+      "auditLogsRetentionDays": null,
+      "hasDeleteProtection": false,
+      "secretSharing": true,
+      "showSnapshotsLegacy": false,
+      "secretDetectionIgnoreValues": null,
+      "enforceEncryptedSecretManagerSecretMetadata": null,
+      "secretBlindIndexEnabled": true,
+      "isLegacyAdditionalPrivilegesEnabled": false,
+      "_id": "c94a6262-ca83-4bd6-adc5-273ebbf4f82f",
+      "environments": [
+        {
+          "name": "Development",
+          "slug": "dev",
+          "id": "07f51b63-502b-40ec-a1ce-9cf94a58d8bc"
+        },
+        {
+          "name": "Staging",
+          "slug": "staging",
+          "id": "5a714139-54f6-42d9-ba33-d6c4ffc9ecda"
+        },
+        {
+          "name": "Production",
+          "slug": "prod",
+          "id": "c8ef7a93-1014-4dcd-bb16-a7c0fb62634d"
+        }
+      ],
+      "deletedEnvironments": []
+    }
+  }
+}
