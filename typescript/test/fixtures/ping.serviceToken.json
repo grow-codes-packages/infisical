@@ -1,0 +1,50 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/api/v2/service-token"
+  },
+  "status": 200,
+  "body": {
+    "id": "c6657517-316c-4aa4-bd97-47c010167d67",
+    "name": "sdk-tests",
+    "scopes": [
+      {
+        "secretPath": "/",
+        "environment": "dev"
+      }
+    ],
+    "permissions": ["read", "write"],
+    "lastUsed": null,
+    "expiresAt": null,
+    "secretHash": "$2b$10$Sfed1ESoRFepHA4UuCvvVOx9BKxXcA8qTZIwIZDzMCS7r4oi1KnEO",
+    "encryptedKey": "unused",
+    "iv": "unused",
+    "tag": "unused",
+    "createdAt": "2026-11-18T20:28:10.937Z",
+    "updatedAt": "2026-11-18T20:28:10.937Z",
+    "createdBy": "fa8aa62d-1224-4743-82a3-1cfebd14051f",
+    "projectId": "d4ac094e-aa12-4d7f-96ab-1ebb84162b30",
+    "expiryNotificationSent": false,
+    "workspace": "d4ac094e-aa12-4d7f-96ab-1ebb84162b30",
+    "user": {
+      "authMethods": ["email"],
+      "id": "fa8aa62d-1224-4743-82a3-1cfebd14051f",
+      "createdAt": "2026-11-18T20:28:09.917Z",
+      "updatedAt": "2026-11-18T20:28:10.164Z",
+      "devices": [
+        {
+          "ip": "172.28.0.5",
+          "userAgent": "grow-codes-infisical-bootstrap/1"
+        }
+      ],
+      "email": "admin@sdk-test.invalid",
+      "firstName": "Admin",
+      "lastName": "User",
+      "__v": 0,
+      "_id": "fa8aa62d-1224-4743-82a3-1cfebd14051f",
+      "mfaMethods": null
+    },
+    "_id": "c6657517-316c-4aa4-bd97-47c010167d67",
+    "__v": 0
+  }
+}

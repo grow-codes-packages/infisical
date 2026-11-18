@@ -1,0 +1,22 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/api/v1/projects/d4ac094e-aa12-4d7f-96ab-1ebb84162b30/environments/slug/e-49lj3988"
+  },
+  "status": 200,
+  "body": {
+    "environment": {
+      "id": "2fcc7228-0bd2-4468-9c8e-4bbe3deecfbe",
+      "name": "E 49lj3988",
+      "slug": "e-49lj3988",
+      "position": 5,
+      "projectId": "d4ac094e-aa12-4d7f-96ab-1ebb84162b30",
+      "createdAt": "2026-11-18T20:28:17.334Z",
+      "updatedAt": "2026-11-18T20:28:17.334Z",
+      "deleteAfter": null,
+      "softDeletedAt": null,
+      "deletedByUserId": null,
+      "deletedByIdentityId": null
+    }
+  }
+}

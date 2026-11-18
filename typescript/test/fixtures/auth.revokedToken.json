@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/api/v4/secrets/SDK_SEED?projectId=d4ac094e-aa12-4d7f-96ab-1ebb84162b30&environment=dev"
+  },
+  "status": 401,
+  "body": {
+    "reqId": "req-qY5W1mR5h0n6Jq",
+    "statusCode": 401,
+    "message": "Failed to authorize: token has been revoked",
+    "error": "UnauthorizedError"
+  }
+}

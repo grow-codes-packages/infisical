@@ -1,15 +1,22 @@
 // Service-owned: generated once by sdk-kit, then maintained in this repository.
-// The skeleton targets the sdk-kit demo server: GET /health, GET /v1/ping, GET /version.
 
+import type { Dispatcher } from "undici";
 import {
   type HealthStatus,
   HttpTransport,
   type TransportOptions,
   UnsupportedError,
+  createDispatcher,
   healthStatus,
   probeHealth,
 } from "./core/index.js";
 import { InfisicalConfig, type InfisicalConfigOptions } from "./config.js";
+import { type InfisicalAuth, TokenAuth, UniversalAuth } from "./auth.js";
+import { Api, type ResolvedApiVersion } from "./api.js";
+import { SecretsApi } from "./api-secrets.js";
+import { FoldersApi, ImportsApi, ProjectsApi, TagsApi } from "./api-resources.js";
+import { InfisicalSecretsProvider, type InfisicalSecretsProviderOptions } from "./provider.js";
+import { errorBodyInterceptor, send } from "./http.js";
 
 /** Per-call options. */
 export interface CallOptions {
@@ -17,30 +24,66 @@ export interface CallOptions {
   signal?: AbortSignal;
 }
 
-/** Test seams (undici `MockAgent`, fake sleep). Not part of the stable API. */
+/** Test seams (undici `MockAgent`, fake sleep, clock). Not part of the stable API. */
 export type ClientInternals = Pick<TransportOptions, "dispatcher" | "sleep" | "now">;
 
-/** Client for Infisical. */
+/** Routes used by `ping()` per token kind. */
+const PING_PATHS = {
+  identity: "/api/v1/identities/details",
+  user: "/api/v2/users/me",
+  serviceToken: "/api/v2/service-token",
+} as const;
+
+/** Client for Infisical. Service modules: `secrets`, `folders`, `projects`, `tags`, `imports`. */
 export class InfisicalClient {
   /** The immutable configuration. */
   readonly config: InfisicalConfig;
+  /** Secrets: list/get/create/update/delete, batch, versions, `loadEnv`, `exportDotenv`. */
+  readonly secrets: SecretsApi;
+  /** Folders: list/create/update/delete. */
+  readonly folders: FoldersApi;
+  /** Projects and environments. */
+  readonly projects: ProjectsApi;
+  /** Tags. */
+  readonly tags: TagsApi;
+  /** Secret imports. */
+  readonly imports: ImportsApi;
+  /** The SPEC §3 `SecretsProvider` for the configured project/environment/path. */
+  readonly provider: InfisicalSecretsProvider;
   readonly #transport: HttpTransport;
+  readonly #api: Api;
+  readonly #dispatcher: Dispatcher | undefined;
+  readonly #providers = new Set<InfisicalSecretsProvider>();
   #closed = false;
 
   /** Accepts a {@link InfisicalConfig} or plain options. */
   constructor(config: InfisicalConfigOptions = {}, internals: ClientInternals = {}) {
     const cfg = InfisicalConfig.from(config);
     this.config = cfg;
+    const auth = resolveAuth(cfg);
+    const base = internals.dispatcher ?? createDispatcher(cfg);
+    this.#dispatcher = internals.dispatcher === undefined ? base : undefined;
     this.#transport = new HttpTransport({
       ...internals,
+      dispatcher: base.compose(errorBodyInterceptor()),
       config: cfg,
-      defaultHeaders: (): Record<string, string> =>
-        cfg.token === undefined ? {} : { authorization: `Bearer ${cfg.token.reveal()}` },
-      knownSecrets: () => cfg.knownSecrets(),
+      knownSecrets: () => [...cfg.knownSecrets(), ...(auth?.knownSecrets() ?? [])],
     });
+    auth?.bind({
+      transport: this.#transport,
+      organizationSlug: cfg.organizationSlug,
+      now: internals.now ?? Date.now,
+    });
+    this.#api = new Api(cfg, this.#transport, auth);
+    this.secrets = new SecretsApi(this.#api);
+    this.folders = new FoldersApi(this.#api);
+    this.projects = new ProjectsApi(this.#api);
+    this.tags = new TagsApi(this.#api);
+    this.imports = new ImportsApi(this.#api);
+    this.provider = this.secretsProvider();
   }
 
-  /** Builds a client from `GROW_INFISICAL_*` (and vendor) environment variables. */
+  /** Builds a client from `GROW_INFISICAL_*` (and `INFISICAL_*`) environment variables. */
   static fromEnv(overrides: InfisicalConfigOptions = {}): InfisicalClient {
     return new InfisicalClient(InfisicalConfig.fromEnv(overrides));
   }
@@ -50,46 +93,91 @@ export class InfisicalClient {
     return this.#transport;
   }
 
+  /** The active auth method (`undefined` when no credentials are configured). */
+  get auth(): InfisicalAuth | undefined {
+    return this.#api.auth;
+  }
+
   /**
-   * Unauthenticated liveness: `GET /health`. Never throws for an unhealthy or unreachable
+   * A `SecretsProvider` for another project, environment or base path. It is stopped by
+   * {@link close} like {@link provider}.
+   */
+  secretsProvider(options: InfisicalSecretsProviderOptions = {}): InfisicalSecretsProvider {
+    const p = new InfisicalSecretsProvider(
+      this.#api,
+      { secrets: this.secrets, folders: this.folders, tags: this.tags },
+      options,
+    );
+    this.#providers.add(p);
+    return p;
+  }
+
+  /** The secrets API version in use: `v4`, `v3` or `unknown` before the first secrets call. */
+  apiVersion(_resource: "secrets" = "secrets"): ResolvedApiVersion {
+    return this.#api.secretsVersion();
+  }
+
+  /**
+   * Unauthenticated liveness: `GET /api/status`. Never throws for an unhealthy or unreachable
    * service (only `CANCELLED` and `CONFIG`).
    */
   health(options: CallOptions = {}): Promise<HealthStatus> {
     return probeHealth(async () => {
-      const res = await this.#transport.get<Record<string, unknown> | undefined>("/health", {
+      const data = await send<Record<string, unknown> | undefined>(this.#transport, {
+        method: "GET",
+        path: "/api/status",
         operation: "health",
-        ...options,
+        signal: options.signal,
       });
-      const { status, ...details } = res.data ?? {};
-      return healthStatus(typeof status === "string" ? status : "ok", details);
+      const { message, ...details } = data ?? {};
+      const word = typeof message === "string" ? message.toLowerCase() : "ok";
+      return healthStatus(word, details);
     });
   }
 
-  /** Authenticated round trip: `GET /v1/ping`. Returns the latency in milliseconds. */
+  /**
+   * Authenticated round trip; returns the latency in milliseconds. The route depends on the token
+   * kind: identity `GET /api/v1/identities/details`, user `GET /api/v2/users/me`, service token
+   * `GET /api/v2/service-token`. `AuthenticationError` on bad credentials.
+   */
   async ping(options: CallOptions = {}): Promise<number> {
     const start = performance.now();
-    await this.#transport.get("/v1/ping", { operation: "ping", responseType: "none", ...options });
+    const kind = this.#api.auth?.tokenKind ?? "identity";
+    await this.#api.call({
+      method: "GET",
+      path: PING_PATHS[kind],
+      operation: "ping",
+      signal: options.signal,
+    });
     return performance.now() - start;
   }
 
-  /** Server version: `GET /version` → `{"version": "x.y.z"}`. */
-  async serverVersion(options: CallOptions = {}): Promise<string> {
-    const res = await this.#transport.get<{ version?: unknown } | undefined>("/version", {
-      operation: "serverVersion",
-      allowStatus: [404],
-      ...options,
-    });
-    const version = res.data?.version;
-    if (res.status === 404 || typeof version !== "string") {
-      throw new UnsupportedError("serverVersion: the service does not report a version");
-    }
-    return version;
+  /** Always `UnsupportedError`: Infisical exposes no running version over HTTP. */
+  serverVersion(_options: CallOptions = {}): Promise<string> {
+    return Promise.reject(
+      new UnsupportedError("serverVersion: Infisical does not report its version"),
+    );
   }
 
-  /** Releases connections. Idempotent. */
+  /**
+   * Stops watchers, revokes a login token when `revokeOnClose` is set and releases connections.
+   * Idempotent.
+   */
   async close(): Promise<void> {
     if (this.#closed) return;
     this.#closed = true;
+    for (const p of this.#providers) await p.close();
+    await this.#api.auth?.close(this.config.revokeOnClose);
     await this.#transport.close();
+    await this.#dispatcher?.close().catch(() => undefined);
   }
+}
+
+function resolveAuth(cfg: InfisicalConfig): InfisicalAuth | undefined {
+  if (cfg.auth !== undefined) return cfg.auth;
+  if (cfg.token !== undefined) return new TokenAuth(cfg.token);
+  if (cfg.clientId !== undefined && cfg.clientSecret !== undefined) {
+    return new UniversalAuth(cfg.clientId, cfg.clientSecret);
+  }
+  return undefined;
 }

@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/api/v1/projects/00000000-0000-0000-0000-000000000000"
+  },
+  "status": 404,
+  "body": {
+    "reqId": "req-ENGA0wBtYACkdG",
+    "statusCode": 404,
+    "message": "Project with ID '00000000-0000-0000-0000-000000000000' not found",
+    "error": "NotFound"
+  }
+}

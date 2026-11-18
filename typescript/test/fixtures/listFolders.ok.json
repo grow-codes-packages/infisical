@@ -1,0 +1,35 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/api/v2/folders?projectId=d4ac094e-aa12-4d7f-96ab-1ebb84162b30&environment=dev&path=/"
+  },
+  "status": 200,
+  "body": {
+    "folders": [
+      {
+        "id": "841095bb-94c9-4137-be62-0fdab2b1ccd4",
+        "name": "app",
+        "version": 1,
+        "createdAt": "2026-11-18T20:28:10.391Z",
+        "updatedAt": "2026-11-18T20:28:10.391Z",
+        "envId": "e69998ff-17bd-42df-9b78-227db869586a",
+        "parentId": "08c68654-91ea-48c1-852e-a3eda6fa4e63",
+        "isReserved": false,
+        "description": null,
+        "lastSecretModified": null
+      },
+      {
+        "id": "e182ee25-3082-409f-937f-236cf3065f01",
+        "name": "f-49lj3988",
+        "version": 1,
+        "createdAt": "2026-11-18T20:28:17.074Z",
+        "updatedAt": "2026-11-18T20:28:17.074Z",
+        "envId": "e69998ff-17bd-42df-9b78-227db869586a",
+        "parentId": "08c68654-91ea-48c1-852e-a3eda6fa4e63",
+        "isReserved": false,
+        "description": null,
+        "lastSecretModified": null
+      }
+    ]
+  }
+}
