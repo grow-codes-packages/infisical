@@ -1,0 +1,17 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/api/v1/projects/d4ac094e-aa12-4d7f-96ab-1ebb84162b30/tags",
+    "body": {
+      "slug": "t-49lj3988",
+      "color": "#00aa00"
+    }
+  },
+  "status": 400,
+  "body": {
+    "reqId": "req-3fBsPimJanb225",
+    "statusCode": 400,
+    "message": "Tag already exists",
+    "error": "BadRequest"
+  }
+}

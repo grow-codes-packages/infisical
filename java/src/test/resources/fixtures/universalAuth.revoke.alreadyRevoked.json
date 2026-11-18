@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/api/v1/auth/token/revoke",
+    "body": {
+      "accessToken": "<redacted>"
+    }
+  },
+  "status": 200,
+  "body": {
+    "message": "Successfully revoked access token"
+  }
+}

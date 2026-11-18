@@ -1,0 +1,34 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/api/v1/auth/token-auth/identities/1b2dba54-1480-4153-bb58-2901632150a2/tokens",
+    "body": {
+      "name": "sdk"
+    }
+  },
+  "status": 200,
+  "body": {
+    "accessToken": "<redacted>",
+    "expiresIn": 3600,
+    "accessTokenMaxTTL": 7200,
+    "tokenType": "Bearer",
+    "tokenData": {
+      "id": "739225ad-d6ae-471a-918e-85dc16e63fd9",
+      "accessTokenTTL": 3600,
+      "accessTokenMaxTTL": 7200,
+      "accessTokenNumUses": 0,
+      "accessTokenNumUsesLimit": 0,
+      "accessTokenLastUsedAt": null,
+      "accessTokenLastRenewedAt": null,
+      "isAccessTokenRevoked": false,
+      "identityUAClientSecretId": null,
+      "identityId": "1b2dba54-1480-4153-bb58-2901632150a2",
+      "createdAt": "2026-11-18T20:17:01.097Z",
+      "updatedAt": "2026-11-18T20:17:01.097Z",
+      "name": "sdk",
+      "authMethod": "token-auth",
+      "accessTokenPeriod": 0,
+      "subOrganizationId": null
+    }
+  }
+}
