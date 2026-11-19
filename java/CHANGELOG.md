@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/grow-codes-packages/infisical/compare/java-v0.1.1...java-v0.1.2) (2026-11-19)
+
+
+### Dependencies
+
+* **java:** Bump the java group across 2 directories with 11 updates ([#13](https://github.com/grow-codes-packages/infisical/issues/13)) ([c0051e4](https://github.com/grow-codes-packages/infisical/commit/c0051e4c7e8bd3f8802e9da0c50a1344fc3efdd2))
+
 ## [0.1.1](https://github.com/grow-codes-packages/infisical/compare/java-v0.1.0...java-v0.1.1) (2026-11-19)
 
 

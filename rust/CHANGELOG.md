@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/grow-codes-packages/infisical/compare/rust-v0.1.1...rust-v0.1.2) (2026-11-19)
+
+
+### Dependencies
+
+* **rust:** Bump the rust group across 2 directories with 4 updates ([#15](https://github.com/grow-codes-packages/infisical/issues/15)) ([c9333f0](https://github.com/grow-codes-packages/infisical/commit/c9333f0e5b828d86f4e17d4f79dc7649cc560d4b))
+
 ## [0.1.1](https://github.com/grow-codes-packages/infisical/compare/rust-v0.1.0...rust-v0.1.1) (2026-11-19)
 
 
