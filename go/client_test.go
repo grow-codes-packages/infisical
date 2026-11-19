@@ -411,19 +411,3 @@ func TestScopeErrors(t *testing.T) {
 		t.Fatal("no request expected")
 	}
 }
-
-// newTestClient builds a client for url with fast retries and a static token
-// (used by the generated TLS tests); mutate adjusts the config.
-func newTestClient(t *testing.T, url string, mutate func(*Config)) *Client {
-	t.Helper()
-	cfg := Config{CommonConfig: CommonConfig{URL: url, Retry: fastRetry(3)}, Token: NewSecret(testToken)}
-	if mutate != nil {
-		mutate(&cfg)
-	}
-	c, err := NewClient(cfg)
-	if err != nil {
-		t.Fatalf("NewClient: %v", err)
-	}
-	t.Cleanup(func() { _ = c.Close() })
-	return c
-}

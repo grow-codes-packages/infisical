@@ -682,7 +682,7 @@ Licensed under the [Apache License, Version 2.0](LICENSE). See [NOTICE](NOTICE) 
 ## Trademarks and disclaimer
 
 This is an independent, community-maintained project. It is **not affiliated with, endorsed or
-sponsored by Infisical, Inc.**. Infisical is a trademark of Infisical, Inc.; it is used here only to name the
+sponsored by its owner (Infisical, Inc.)**. Infisical is a trademark of Infisical, Inc.; it is used here only to name the
 service this SDK connects to. The Infisical server is licensed separately by its owner
 (MIT core + Infisical Enterprise licence for `ee/`).
 

@@ -36,5 +36,5 @@ Start with [Install](install.md) and the [Quickstart](quickstart.md).
 
 !!! note "Independent project"
     This SDK is made by [Grow Codes](https://grow.codes). Infisical is a trademark of
-    Infisical, Inc.. This project is not affiliated with or endorsed by Infisical, Inc.. See
+    its owner (Infisical, Inc.); this project is not affiliated with or endorsed by it. See
     [License & disclaimer](license.md).

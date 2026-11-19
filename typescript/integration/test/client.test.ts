@@ -87,7 +87,7 @@ describe("core", () => {
     await rejectsWith(c.serverVersion(), "UNSUPPORTED");
     await c.close();
     await c.close();
-    await rejectsWith(c.ping(), "CONFIG");
+    await rejectsWith(c.ping(), "CANCELLED");
   });
 });
 
