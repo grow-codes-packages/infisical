@@ -1,0 +1,16 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/api/v1/auth/token/renew",
+    "body": {
+      "accessToken": "<redacted>"
+    }
+  },
+  "status": 200,
+  "body": {
+    "accessToken": "<redacted>",
+    "expiresIn": 300,
+    "accessTokenMaxTTL": 3600,
+    "tokenType": "Bearer"
+  }
+}

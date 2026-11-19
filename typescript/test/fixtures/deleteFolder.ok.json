@@ -1,0 +1,26 @@
+{
+  "request": {
+    "method": "DELETE",
+    "path": "/api/v2/folders/e182ee25-3082-409f-937f-236cf3065f01",
+    "body": {
+      "projectId": "d4ac094e-aa12-4d7f-96ab-1ebb84162b30",
+      "environment": "dev",
+      "path": "/"
+    }
+  },
+  "status": 200,
+  "body": {
+    "folder": {
+      "id": "e182ee25-3082-409f-937f-236cf3065f01",
+      "name": "g-49lj3988",
+      "version": 2,
+      "createdAt": "2026-11-18T20:28:17.074Z",
+      "updatedAt": "2026-11-18T20:28:17.151Z",
+      "envId": "e69998ff-17bd-42df-9b78-227db869586a",
+      "parentId": "08c68654-91ea-48c1-852e-a3eda6fa4e63",
+      "isReserved": false,
+      "description": null,
+      "lastSecretModified": null
+    }
+  }
+}

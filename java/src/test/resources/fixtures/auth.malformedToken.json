@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/api/v1/identities/details"
+  },
+  "status": 403,
+  "body": {
+    "reqId": "req-Pzo5lTCTSGutpn",
+    "statusCode": 403,
+    "message": "The provided access token is malformed. Please use a valid token or generate a new one and try again.",
+    "error": "TokenError"
+  }
+}

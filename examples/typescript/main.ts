@@ -1,9 +1,12 @@
-// Basics of the Infisical TypeScript SDK: configuration from the environment, hooks, health,
-// an authenticated ping, the server version and error handling.
+// Infisical TypeScript SDK example: configuration from the environment (Universal Auth or a
+// static token), health, ping, secrets CRUD, folders, the SecretsProvider, env injection and
+// error handling.
 //
 //   (cd ../../typescript && npm install && npm run build)   # or use the published package
 //   npm install
-//   GROW_INFISICAL_URL=http://127.0.0.1:<port> GROW_INFISICAL_TOKEN=... npm start
+//   GROW_INFISICAL_URL=http://127.0.0.1:8080 \
+//   INFISICAL_CLIENT_ID=... INFISICAL_CLIENT_SECRET=... \
+//   INFISICAL_PROJECT_ID=... INFISICAL_ENVIRONMENT=dev npm start
 
 import { InfisicalClient, InfisicalError } from "@grow-codes/infisical";
 
@@ -19,19 +22,56 @@ const client = InfisicalClient.fromEnv({
 });
 console.log(`config: ${client.config}`); // credentials print as [REDACTED]
 
+const run = Math.random().toString(36).slice(2, 8);
+const key = `EXAMPLE_${run.toUpperCase()}`;
+const folder = `example-${run}`;
+
 try {
   const health = await client.health(); // never throws for an unreachable service
-  console.log("health:", health);
-  if (!health.healthy) process.exitCode = 1;
+  console.log("health:", health.status);
+  if (!health.healthy) process.exit(1);
+  console.log(
+    `ping: ${(await client.ping({ signal: AbortSignal.timeout(10_000) })).toFixed(1)} ms`,
+  );
 
-  const latency = await client.ping({ signal: AbortSignal.timeout(10_000) });
-  console.log(`ping: ${latency.toFixed(1)} ms`);
+  // Secrets API (v4, v3 fallback detected at run time)
+  await client.folders.createFolder(folder);
+  await client.secrets.createSecret(key, "s3cr3t", { secretPath: `/${folder}`, comment: "demo" });
+  await client.secrets.updateSecret(key, { secretPath: `/${folder}`, value: "s3cr3t-2" });
+  const secret = await client.secrets.getSecret(key, { secretPath: `/${folder}` });
+  console.log(`${secret.key} v${secret.version} = ${secret.value}`); // value prints redacted
+  console.log("api version:", client.apiVersion());
+
+  // SecretsProvider: names are "<folder>/<key>"
+  const p = client.provider;
+  await p.set(`${folder}/PORT`, "5432");
+  console.log("PORT as number:", await p.getNumber(`${folder}/PORT`));
+  console.log(
+    "list:",
+    (await p.list(folder)).map((m) => `${m.name}@${m.version}`),
+  );
+
+  // Env injection
+  const target: Record<string, string | undefined> = {};
+  console.log(
+    "loadEnv set:",
+    Object.keys(await client.secrets.loadEnv({ secretPath: `/${folder}`, env: target })),
+  );
+  console.log(
+    "dotenv keys:",
+    (await client.secrets.exportDotenv({ secretPath: `/${folder}` }))
+      .split("\n")
+      .filter(Boolean)
+      .map((l) => l.split("=")[0]),
+  );
+
+  await client.folders.deleteFolder(folder, { forceDelete: true });
 
   try {
-    console.log("server version:", await client.serverVersion());
+    await client.serverVersion();
   } catch (err) {
     if (err instanceof InfisicalError && err.code === "UNSUPPORTED") {
-      console.log("server version: not reported by this service");
+      console.log("server version: not reported by Infisical");
     } else {
       throw err;
     }

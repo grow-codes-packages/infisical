@@ -1,0 +1,14 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/api/v5/secrets?projectId=d4ac094e-aa12-4d7f-96ab-1ebb84162b30&environment=dev"
+  },
+  "status": 404,
+  "body": {
+    "reqId": "req-A7h75amp3rNIbw",
+    "statusCode": 404,
+    "message": "Route GET:/api/v5/secrets?projectId=d4ac094e-aa12-4d7f-96ab-1ebb84162b30&environment=dev not found",
+    "error": "Not Found",
+    "documentationUrl": "https://infisical.com/docs/api-reference"
+  }
+}

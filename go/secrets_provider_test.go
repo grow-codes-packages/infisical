@@ -281,7 +281,9 @@ func (vanishing) PutSecret(context.Context, string, []byte, infisical.SetOptions
 	return "", nil
 }
 
-func (vanishing) RemoveSecret(context.Context, string, infisical.DeleteOptions) error { return nil }
+func (vanishing) RemoveSecret(context.Context, string, infisical.DeleteOptions) error {
+	return nil
+}
 
 func (vanishing) FetchMetadata(context.Context, string, infisical.GetOptions) (*infisical.SecretMetadata, error) {
 	return nil, nil

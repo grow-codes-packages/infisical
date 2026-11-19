@@ -59,3 +59,25 @@ copyright and licence.
 
   CODE_OF_CONDUCT.md is adapted from the Contributor Covenant, version 2.1,
   https://www.contributor-covenant.org, licensed under CC BY 4.0.
+
+  No Infisical server, SDK or CLI source code is copied into this repository,
+  and nothing from Infisical's "ee/" (Infisical Enterprise licence) folders is
+  used. The SDKs implement Infisical's public HTTP API from scratch. The names
+  of the environment variables INFISICAL_API_URL, INFISICAL_TOKEN,
+  INFISICAL_CLIENT_ID, INFISICAL_CLIENT_SECRET, INFISICAL_PROJECT_ID,
+  INFISICAL_ENVIRONMENT, INFISICAL_UNIVERSAL_AUTH_CLIENT_ID and
+  INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET are read for compatibility with the
+  Infisical CLI (MIT).
+
+  The AWS Signature Version 4 implementation of AwsIamAuth (all five
+  languages) follows the public AWS SigV4 specification. Its unit tests use
+  the example credentials and expected signatures published by Amazon Web
+  Services in the AWS Signature Version 4 test suite and the AWS General
+  Reference ("get-vanilla", "get-vanilla-query-order-key-case", IAM ListUsers
+  2015-08-30 example), and one signature cross-checked with botocore
+  (Copyright Amazon.com, Inc. or its affiliates, Apache License 2.0). They are
+  test data only and are not part of the published packages.
+
+  The test fixtures (the "fixtures" folders of the unit tests) are responses
+  recorded from a local infisical/infisical:v0.167.10 container with every
+  credential replaced by "<redacted>"; they contain no Infisical source code.

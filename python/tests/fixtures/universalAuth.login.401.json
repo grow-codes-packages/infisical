@@ -1,0 +1,17 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/api/v1/auth/universal-auth/login",
+    "body": {
+      "clientId": "72dd2977-036c-47f5-8d64-dee1b60073d6",
+      "clientSecret": "<redacted>"
+    }
+  },
+  "status": 401,
+  "body": {
+    "reqId": "req-RB1FkXIlEl5pMt",
+    "statusCode": 401,
+    "message": "Invalid credentials",
+    "error": "UnauthorizedError"
+  }
+}

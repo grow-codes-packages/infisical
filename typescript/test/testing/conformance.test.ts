@@ -14,9 +14,8 @@ let server: MockServer;
 
 beforeAll(async () => {
   server = await startServer((req) => {
-    if (req.url === "/health") return { status: 200, body: { status: "ok" } };
-    if (req.url === "/version") return { status: 200, body: { version: "0.0.1" } };
-    if (req.url === "/v1/ping") return { status: 200, body: {} };
+    if (req.url === "/api/status") return { status: 200, body: { message: "Ok" } };
+    if (req.url === "/api/v1/identities/details") return { status: 200, body: {} };
     return { status: 404 };
   });
 });
@@ -32,11 +31,12 @@ function options(): ConformanceOptions {
     factories: {
       core: () => new InfisicalClient({ url: server.url, token: "conformance-token" }),
     },
-    capabilities: { core: ["version"] },
+    // Infisical reports no server version: the serverVersion step is skipped (no "version").
+    capabilities: { core: [] },
   };
 }
 
-describe("conformance (core) against a local demo API", () => {
+describe("conformance (core) against a local Infisical stub", () => {
   it("every core scenario passes", async () => {
     const report = await runConformance(options());
     expect(report.failed, formatReport(report)).toBe(0);

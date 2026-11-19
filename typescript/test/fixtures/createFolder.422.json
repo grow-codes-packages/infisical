@@ -1,0 +1,25 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/api/v2/folders",
+    "body": {
+      "projectId": "d4ac094e-aa12-4d7f-96ab-1ebb84162b30",
+      "environment": "dev",
+      "path": "/",
+      "name": "bad/name"
+    }
+  },
+  "status": 422,
+  "body": {
+    "reqId": "req-2AuLfguQZuud34",
+    "statusCode": 422,
+    "message": [
+      {
+        "code": "custom",
+        "message": "Invalid folder name. Only alphanumeric characters, dashes, and underscores are allowed.",
+        "path": ["name"]
+      }
+    ],
+    "error": "ValidationFailure"
+  }
+}

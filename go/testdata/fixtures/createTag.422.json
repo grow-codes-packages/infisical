@@ -1,0 +1,25 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/api/v1/projects/c94a6262-ca83-4bd6-adc5-273ebbf4f82f/tags",
+    "body": {
+      "slug": "Bad Slug",
+      "color": "#ff0000"
+    }
+  },
+  "status": 422,
+  "body": {
+    "reqId": "req-x1cPOQXzMNn3Ry",
+    "statusCode": 422,
+    "message": [
+      {
+        "code": "custom",
+        "message": "Slug field can only contain lowercase letters, numbers, and hyphens",
+        "path": [
+          "slug"
+        ]
+      }
+    ],
+    "error": "ValidationFailure"
+  }
+}

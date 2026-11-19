@@ -1,0 +1,58 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/api/v1/projects/d4ac094e-aa12-4d7f-96ab-1ebb84162b30"
+  },
+  "status": 200,
+  "body": {
+    "project": {
+      "id": "d4ac094e-aa12-4d7f-96ab-1ebb84162b30",
+      "name": "SDK Test",
+      "description": "grow-codes-packages/infisical integration tests",
+      "type": "secret-manager",
+      "defaultProduct": null,
+      "slug": "sdk-test",
+      "autoCapitalization": false,
+      "orgId": "78d6a246-c8a4-4dce-bb57-23f73de44470",
+      "createdAt": "2026-11-18T20:28:10.277Z",
+      "updatedAt": "2026-11-18T20:28:10.480Z",
+      "version": 3,
+      "upgradeStatus": null,
+      "pitVersionLimit": 10,
+      "kmsCertificateKeyId": null,
+      "kmsSecretManagerKeyId": "913dba0d-1d82-44f1-8256-963c8e4572df",
+      "auditLogsRetentionDays": null,
+      "hasDeleteProtection": false,
+      "secretSharing": true,
+      "showSnapshotsLegacy": false,
+      "secretDetectionIgnoreValues": null,
+      "enforceEncryptedSecretManagerSecretMetadata": null,
+      "secretBlindIndexEnabled": true,
+      "isLegacyAdditionalPrivilegesEnabled": false,
+      "_id": "d4ac094e-aa12-4d7f-96ab-1ebb84162b30",
+      "environments": [
+        {
+          "name": "Development",
+          "slug": "dev",
+          "id": "e69998ff-17bd-42df-9b78-227db869586a"
+        },
+        {
+          "name": "Staging",
+          "slug": "staging",
+          "id": "e999ce14-28f1-45d7-9316-cf5074d8b064"
+        },
+        {
+          "name": "Production",
+          "slug": "prod",
+          "id": "baf8e89e-e937-4bee-be20-dcbfaf3cb18f"
+        },
+        {
+          "name": "Test",
+          "slug": "test",
+          "id": "ff751b58-5671-4ac2-b94e-a1d01c1cce96"
+        }
+      ],
+      "deletedEnvironments": []
+    }
+  }
+}

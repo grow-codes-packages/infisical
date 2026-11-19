@@ -1,0 +1,17 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/api/status"
+  },
+  "status": 200,
+  "body": {
+    "date": "2026-11-18T20:28:13.235Z",
+    "message": "Ok",
+    "emailConfigured": false,
+    "inviteOnlySignup": false,
+    "redisConfigured": true,
+    "secretScanningConfigured": false,
+    "auditLogStorageDisabled": false,
+    "maxIdentityAccessTokenTTL": 7776000
+  }
+}

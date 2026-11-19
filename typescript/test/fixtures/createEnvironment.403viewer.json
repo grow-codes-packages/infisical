@@ -1,0 +1,18 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/api/v1/projects/d4ac094e-aa12-4d7f-96ab-1ebb84162b30/environments",
+    "body": {
+      "name": "X",
+      "slug": "x-denied"
+    }
+  },
+  "status": 403,
+  "body": {
+    "reqId": "req-IXM3I5T9qrlfbW",
+    "statusCode": 403,
+    "message": "You are not allowed to create on environments",
+    "details": [],
+    "error": "PermissionDenied"
+  }
+}

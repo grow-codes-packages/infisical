@@ -1,0 +1,46 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/api/v2/users/me"
+  },
+  "status": 200,
+  "body": {
+    "user": {
+      "id": "fa8aa62d-1224-4743-82a3-1cfebd14051f",
+      "email": "admin@sdk-test.invalid",
+      "authMethods": ["email"],
+      "superAdmin": true,
+      "firstName": "Admin",
+      "lastName": "User",
+      "isAccepted": true,
+      "isMfaEnabled": false,
+      "mfaMethods": null,
+      "devices": [
+        {
+          "ip": "172.28.0.5",
+          "userAgent": "grow-codes-infisical-bootstrap/1"
+        }
+      ],
+      "createdAt": "2026-11-18T20:28:09.917Z",
+      "updatedAt": "2026-11-18T20:28:10.164Z",
+      "isGhost": false,
+      "username": "admin@sdk-test.invalid",
+      "isEmailVerified": true,
+      "consecutiveFailedMfaAttempts": 0,
+      "isLocked": false,
+      "temporaryLockDateEnd": null,
+      "consecutiveFailedPasswordAttempts": 0,
+      "selectedMfaMethod": null,
+      "isGitHubVerified": null,
+      "isGitLabVerified": null,
+      "isGoogleVerified": null,
+      "encryptedPrivateKey": null,
+      "iv": null,
+      "tag": null,
+      "salt": null,
+      "protectedKey": null,
+      "protectedKeyIV": null,
+      "protectedKeyTag": null
+    }
+  }
+}

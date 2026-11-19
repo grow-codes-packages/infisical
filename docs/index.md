@@ -27,7 +27,10 @@ has the same functions, options, defaults, error codes and behaviour, tested aga
 - **Redaction everywhere**: credentials never appear in errors, logs, hooks or `toString`
   ([Redaction](redaction.md)).
 - **Secrets**: typed getters, bulk reads, `loadEnv`, watch and a TTL cache ([Secrets](secrets.md)).
-- **Service functions** for the Infisical API ([Functions](functions.md)).
+- **The Infisical API** ([Functions](functions.md)): machine identity auth (Universal Auth with
+  automatic refresh, static tokens, Kubernetes, AWS IAM), secrets (v4 with a v3 fallback, batches,
+  references, imports, versions), folders, projects, environments, tags, secret imports, `loadEnv`
+  and dotenv export.
 
 Start with [Install](install.md) and the [Quickstart](quickstart.md).
 

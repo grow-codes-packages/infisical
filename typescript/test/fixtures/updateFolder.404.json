@@ -1,0 +1,19 @@
+{
+  "request": {
+    "method": "PATCH",
+    "path": "/api/v2/folders/00000000-0000-0000-0000-000000000000",
+    "body": {
+      "projectId": "d4ac094e-aa12-4d7f-96ab-1ebb84162b30",
+      "environment": "dev",
+      "path": "/",
+      "name": "x"
+    }
+  },
+  "status": 404,
+  "body": {
+    "reqId": "req-pttvaRKke3LeJa",
+    "statusCode": 404,
+    "message": "Folder with ID '00000000-0000-0000-0000-000000000000' not found",
+    "error": "UpdateFolder"
+  }
+}
