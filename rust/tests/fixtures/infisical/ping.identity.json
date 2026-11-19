@@ -1,0 +1,16 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/api/v1/identities/details"
+  },
+  "status": 200,
+  "body": {
+    "identityDetails": {
+      "organization": {
+        "id": "78d6a246-c8a4-4dce-bb57-23f73de44470",
+        "name": "SDK Test",
+        "slug": "sdk-test-j9-e7"
+      }
+    }
+  }
+}

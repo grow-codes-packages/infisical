@@ -1,0 +1,19 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/api/v1/auth/aws-auth/login",
+    "body": {
+      "identityId": "ab45e4c0-275c-48c1-9c94-4a08c88014f2",
+      "iamHttpRequestMethod": "POST",
+      "iamRequestBody": "QWN0aW9uPUdldENhbGxlcklkZW50aXR5JlZlcnNpb249MjAxMS0wNi0xNQ==",
+      "iamRequestHeaders": "e30="
+    }
+  },
+  "status": 404,
+  "body": {
+    "reqId": "req-iUbWYcLyi5f9c7",
+    "statusCode": 404,
+    "message": "AWS auth method not found for identity, did you configure AWS auth?",
+    "error": "NotFound"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/api/v1/auth/token/renew",
+    "body": {
+      "accessToken": "<redacted>"
+    }
+  },
+  "status": 401,
+  "body": {
+    "reqId": "req-PcJ9au8GqpP8hf",
+    "statusCode": 401,
+    "message": "Cannot renew: token has been revoked",
+    "error": "UnauthorizedError"
+  }
+}

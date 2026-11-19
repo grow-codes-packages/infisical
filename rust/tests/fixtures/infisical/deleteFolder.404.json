@@ -1,0 +1,18 @@
+{
+  "request": {
+    "method": "DELETE",
+    "path": "/api/v2/folders/g-49lj3988",
+    "body": {
+      "projectId": "d4ac094e-aa12-4d7f-96ab-1ebb84162b30",
+      "environment": "dev",
+      "path": "/"
+    }
+  },
+  "status": 404,
+  "body": {
+    "reqId": "req-5r5cXQVYPBpkED",
+    "statusCode": 404,
+    "message": "Target folder not found",
+    "error": "NotFound"
+  }
+}

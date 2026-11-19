@@ -1,0 +1,19 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/api/v2/folders",
+    "body": {
+      "projectId": "d4ac094e-aa12-4d7f-96ab-1ebb84162b30",
+      "environment": "dev",
+      "path": "/",
+      "name": "f-49lj3988"
+    }
+  },
+  "status": 400,
+  "body": {
+    "reqId": "req-T2cjiqMq4T2HoD",
+    "statusCode": 400,
+    "message": "Folder with name 'f-49lj3988' already exists in path '/'",
+    "error": "BadRequest"
+  }
+}
