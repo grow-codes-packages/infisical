@@ -42,8 +42,8 @@ import java.util.function.Supplier;
  *   <li>{@code projectId}: {@code GROW_INFISICAL_PROJECT_ID}, {@code INFISICAL_PROJECT_ID}
  *   <li>{@code environment}: {@code GROW_INFISICAL_ENVIRONMENT}, {@code INFISICAL_ENVIRONMENT}
  *   <li>{@code secretPath}: {@code GROW_INFISICAL_SECRET_PATH} (default {@code /})
- *   <li>{@code apiVersion}: {@code GROW_INFISICAL_API_VERSION} ({@code ""}, {@code v4} or {@code
- *       v3})
+ *   <li>{@code apiVersion}: {@code GROW_INFISICAL_API_VERSION} ({@code auto} or {@code ""}, {@code
+ *       v4} or {@code v3})
  *   <li>{@code revokeOnClose}: {@code GROW_INFISICAL_REVOKE_ON_CLOSE}
  * </ul>
  *
@@ -63,7 +63,10 @@ public final class InfisicalConfig {
   /** Default secret path. */
   public static final String DEFAULT_SECRET_PATH = "/";
 
-  /** {@link #apiVersion()} value that detects the secrets API version at run time. */
+  /**
+   * {@link #apiVersion()} value that detects the secrets API version at run time ({@code "auto"} is
+   * accepted as an alias).
+   */
   public static final String API_VERSION_AUTO = "";
 
   /** {@link #apiVersion()} value that forces the v4 secrets API ({@code /api/v4/secrets}). */
@@ -120,7 +123,9 @@ public final class InfisicalConfig {
     this.projectId = blankToNull(b.projectId);
     this.environment = blankToNull(b.environment);
     this.secretPath = SecretPaths.normalize(b.secretPath);
-    this.apiVersion = b.apiVersion == null ? "" : b.apiVersion.trim().toLowerCase(Locale.ROOT);
+    String version = b.apiVersion == null ? "" : b.apiVersion.trim().toLowerCase(Locale.ROOT);
+    // "auto" is accepted as an alias of "" (the TypeScript/Python spelling).
+    this.apiVersion = version.equals("auto") ? API_VERSION_AUTO : version;
     this.revokeOnClose = Boolean.TRUE.equals(b.revokeOnClose);
     this.connectTimeout = b.connectTimeout != null ? b.connectTimeout : Duration.ofSeconds(10);
     this.requestTimeout = b.requestTimeout != null ? b.requestTimeout : Duration.ofSeconds(30);
@@ -242,7 +247,7 @@ public final class InfisicalConfig {
       }
     }
     if (!List.of(API_VERSION_AUTO, API_VERSION_V4, API_VERSION_V3).contains(apiVersion)) {
-      throw new ConfigException("config: apiVersion must be \"\", \"v4\" or \"v3\"");
+      throw new ConfigException("config: apiVersion must be \"auto\" (or \"\"), \"v4\" or \"v3\"");
     }
     if (auth == null && token == null && (clientId == null) != (clientSecret == null)) {
       throw new ConfigException("config: clientId and clientSecret must be given together");

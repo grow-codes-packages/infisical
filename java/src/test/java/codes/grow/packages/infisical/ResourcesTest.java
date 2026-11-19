@@ -284,14 +284,15 @@ class ResourcesTest {
     fake.on("GET", "/api/v4/secrets", 200, body);
     try (InfisicalClient c = fake.client(b -> b.apiVersion("v4"))) {
       Map<String, String> target = new HashMap<>(Map.of("B", "keep"));
-      List<String> set =
+      Map<String, String> set =
           c.loadEnv(
               EnvOptions.builder()
                   .secretPath("/app")
                   .recursive(true)
                   .target(EnvLoader.map(target))
                   .build());
-      assertThat(set).containsExactly("A", "C");
+      assertThat(set.keySet()).containsExactly("A", "C");
+      assertThat(set).containsEntry("A", "A");
       assertThat(target)
           .containsEntry("A", "one")
           .containsEntry("B", "keep")
@@ -306,7 +307,7 @@ class ResourcesTest {
                   .expandReferences(false)
                   .target(EnvLoader.map(target))
                   .build());
-      assertThat(set).containsExactly("A", "B", "C");
+      assertThat(set.keySet()).containsExactly("A", "B", "C");
       assertThat(target.get("B")).startsWith("two");
       q = Fake.query(fake.last("GET", "/api/v4/secrets"));
       assertThat(q)
@@ -323,7 +324,7 @@ class ResourcesTest {
               200,
               "{\"secrets\":[{\"secretKey\":\"" + prop + "\",\"secretValue\":\"v\"}]}");
       try {
-        assertThat(c.loadEnv(null)).containsExactly(prop);
+        assertThat(c.loadEnv(null).keySet()).containsExactly(prop);
         assertThat(System.getProperty(prop)).isEqualTo("v");
       } finally {
         System.clearProperty(prop);

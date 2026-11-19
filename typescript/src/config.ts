@@ -57,13 +57,19 @@ export interface InfisicalConfigOptions extends CommonConfigOptions {
   environment?: string;
   /** Default secret path (env `GROW_INFISICAL_SECRET_PATH`, default `/`). */
   secretPath?: string;
-  /** Secrets API version (default `auto`: v4, falling back to v3 when v4 is missing). */
-  apiVersion?: ApiVersion;
+  /**
+   * Secrets API version (env `GROW_INFISICAL_API_VERSION`; default `auto`: v4, falling back to v3
+   * when v4 is missing; `""` means `auto`).
+   */
+  apiVersion?: ApiVersion | "";
   /** Expand `${…}` secret references on read (default `true`). */
   expandSecretReferences?: boolean;
   /** Include imported secrets on read (default `true`). */
   includeImports?: boolean;
-  /** Revoke an access token obtained by login when the client is closed (default `false`). */
+  /**
+   * Revoke an access token obtained by login when the client is closed (env
+   * `GROW_INFISICAL_REVOKE_ON_CLOSE`, default `false`).
+   */
   revokeOnClose?: boolean;
 }
 
@@ -155,7 +161,9 @@ export class InfisicalConfig implements CommonConfig {
     if (options.environment !== undefined && options.environment !== "")
       this.environment = options.environment;
     this.secretPath = options.secretPath ?? "/";
-    this.apiVersion = options.apiVersion ?? "auto";
+    // "" is accepted as an alias of "auto" (the Go/Java spelling); case is ignored.
+    const apiVersion = (options.apiVersion ?? "auto").trim().toLowerCase();
+    this.apiVersion = (apiVersion === "" ? "auto" : apiVersion) as ApiVersion;
     this.expandSecretReferences = options.expandSecretReferences ?? true;
     this.includeImports = options.includeImports ?? true;
     this.revokeOnClose = options.revokeOnClose ?? false;
@@ -193,6 +201,10 @@ export class InfisicalConfig implements CommonConfig {
     if (environment !== undefined) fromEnv.environment = environment;
     const secretPath = reader.string("SECRET_PATH");
     if (secretPath !== undefined) fromEnv.secretPath = secretPath;
+    const apiVersion = reader.string("API_VERSION");
+    if (apiVersion !== undefined) fromEnv.apiVersion = apiVersion as ApiVersion;
+    const revokeOnClose = reader.bool("REVOKE_ON_CLOSE");
+    if (revokeOnClose !== undefined) fromEnv.revokeOnClose = revokeOnClose;
     const merged = mergeOptions<InfisicalConfigOptions>(fromEnv, overrides);
     return new InfisicalConfig(merged);
   }

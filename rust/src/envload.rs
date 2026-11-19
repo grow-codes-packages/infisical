@@ -77,9 +77,9 @@ impl InfisicalClient {
 
     /// Sets one process environment variable per secret of a path (like `infisical run`):
     /// the variable name is the secret key unchanged. Existing variables are kept unless
-    /// `override_existing` is set. Returns the names of the variables it set, sorted (never
-    /// values).
-    pub async fn load_env(&self, opts: Option<&EnvOptions>) -> Result<Vec<String>> {
+    /// `override_existing` is set. Returns the variables it set as `env name → secret key`
+    /// (never values), like `SecretsProvider::load_env`.
+    pub async fn load_env(&self, opts: Option<&EnvOptions>) -> Result<BTreeMap<String, String>> {
         self.load_env_into(opts, &mut crate::secrets::ProcessEnv)
             .await
     }
@@ -90,16 +90,16 @@ impl InfisicalClient {
         &self,
         opts: Option<&EnvOptions>,
         sink: &mut dyn EnvSink,
-    ) -> Result<Vec<String>> {
+    ) -> Result<BTreeMap<String, String>> {
         let o = opts.cloned().unwrap_or_default();
         let values = self.env_secrets(&o).await?;
-        let mut set = Vec::with_capacity(values.len());
+        let mut set = BTreeMap::new();
         for (k, v) in &values {
             if sink.get(k).is_some() && !o.override_existing {
                 continue;
             }
             sink.set(k, v);
-            set.push(k.clone());
+            set.insert(k.clone(), k.clone());
         }
         Ok(set)
     }

@@ -1,20 +1,23 @@
 // Service-owned. Infisical secrets API (API.md §3): v4 `/api/v4/secrets` with the v3
 // `/api/v3/secrets/raw` fallback, batch calls, versions, env injection and dotenv export.
 
-import { ValidationError } from "./core/index.js";
+import { NotFoundError, ValidationError } from "./core/index.js";
 import type { Api, ScopeOptions } from "./api.js";
 import type { ApiCall } from "./http.js";
 import { arr, compact, obj, positiveInt, requireText, seg, unexpected } from "./http.js";
 import {
   type InfisicalSecret,
   type SecretList,
-  type SecretMetadataEntry,
   type SecretType,
   type SecretVersion,
   parseSecret,
   parseSecretList,
   parseSecretVersion,
+  parseTag,
 } from "./models.js";
+
+/** Secret metadata: key → value pairs. */
+export type SecretMetadataMap = Readonly<Record<string, string>>;
 
 /** Scope of a secret call: project, environment and folder path. */
 export interface SecretScopeOptions extends ScopeOptions {
@@ -57,9 +60,11 @@ export interface CreateSecretOptions extends SecretScopeOptions {
   comment?: string;
   /** Tag ids (see `client.tags.listTags`). */
   tagIds?: readonly string[];
+  /** Tag slugs, resolved to ids with `listTags` (an unknown slug is `NotFoundError`). */
+  tagSlugs?: readonly string[];
   type?: SecretType;
   skipMultilineEncoding?: boolean;
-  metadata?: readonly SecretMetadataEntry[];
+  metadata?: SecretMetadataMap;
 }
 
 /** Options of {@link SecretsApi.updateSecret}: only the given fields change. */
@@ -71,9 +76,11 @@ export interface UpdateSecretOptions extends SecretScopeOptions {
   comment?: string;
   /** Replaces the tag set (tag ids). */
   tagIds?: readonly string[];
+  /** Replaces the tag set by slug (merged with `tagIds`; an unknown slug is `NotFoundError`). */
+  tagSlugs?: readonly string[];
   type?: SecretType;
   skipMultilineEncoding?: boolean;
-  metadata?: readonly SecretMetadataEntry[];
+  metadata?: SecretMetadataMap;
 }
 
 /** Options of {@link SecretsApi.deleteSecret}. */
@@ -88,7 +95,7 @@ export interface BatchCreateSecret {
   comment?: string;
   tagIds?: readonly string[];
   skipMultilineEncoding?: boolean;
-  metadata?: readonly SecretMetadataEntry[];
+  metadata?: SecretMetadataMap;
 }
 
 /** One secret of {@link SecretsApi.updateSecrets}. */
@@ -101,7 +108,7 @@ export interface BatchUpdateSecret {
   /** Folder of this secret (default: the call's `secretPath`). */
   secretPath?: string;
   skipMultilineEncoding?: boolean;
-  metadata?: readonly SecretMetadataEntry[];
+  metadata?: SecretMetadataMap;
 }
 
 /** Options of {@link SecretsApi.updateSecrets}. */
@@ -144,15 +151,34 @@ function bool(value: boolean): string {
   return value ? "true" : "false";
 }
 
-function wireMetadata(m: readonly SecretMetadataEntry[] | undefined): unknown {
-  return m?.map((e) => ({ key: e.key, value: e.value }));
+function wireMetadata(m: SecretMetadataMap | undefined): unknown {
+  if (m === undefined) return undefined;
+  return Object.keys(m)
+    .sort()
+    .map((key) => ({ key, value: m[key] }));
 }
 
 /**
- * Quotes a value for a dotenv file: `"…"` with `\`, `"` and newlines escaped.
+ * Quotes a value for a dotenv file: `"…"` with `\`, `"`, LF and CR escaped.
  */
 export function dotenvQuote(value: string): string {
-  return `"${value.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\r?\n/g, "\\n")}"`;
+  const escaped = value
+    .replace(/\\/g, "\\\\")
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, "\\n")
+    .replace(/\r/g, "\\r");
+  return `"${escaped}"`;
+}
+
+/** Renders key → value pairs as a dotenv document (`KEY="value"` lines sorted by key). */
+export function formatDotenv(
+  values: Readonly<Record<string, string>> | ReadonlyMap<string, string>,
+): string {
+  const map = values instanceof Map ? values : new Map(Object.entries(values));
+  return [...map.keys()]
+    .sort()
+    .map((k) => `${k}=${dotenvQuote(map.get(k) as string)}\n`)
+    .join("");
 }
 
 /** Secrets of one project environment (`client.secrets`). */
@@ -182,6 +208,30 @@ export class SecretsApi {
 
   #batch(version: "v4" | "v3"): string {
     return version === "v4" ? "/api/v4/secrets/batch" : "/api/v3/secrets/batch/raw";
+  }
+
+  /** Merges tag ids with the ids of tag slugs (one `listTags` call when slugs are given). */
+  async #tagIds(
+    op: string,
+    projectId: string,
+    options: { tagIds?: readonly string[]; tagSlugs?: readonly string[]; signal?: AbortSignal },
+  ): Promise<string[] | undefined> {
+    if (options.tagIds === undefined && options.tagSlugs === undefined) return undefined;
+    const ids = [...(options.tagIds ?? [])];
+    if (options.tagSlugs === undefined || options.tagSlugs.length === 0) return ids;
+    const data = await this.#api.call<unknown>({
+      method: "GET",
+      path: `/api/v1/projects/${seg(projectId)}/tags`,
+      operation: op,
+      signal: options.signal,
+    });
+    const bySlug = new Map(arr(obj(data).tags).map((t) => [parseTag(t).slug, parseTag(t).id]));
+    for (const slug of options.tagSlugs) {
+      const id = bySlug.get(slug);
+      if (id === undefined) throw new NotFoundError(`${op}: tag ${slug} does not exist`);
+      ids.push(id);
+    }
+    return ids;
   }
 
   /**
@@ -273,6 +323,7 @@ export class SecretsApi {
     requireText(name, "name", op);
     if (typeof value !== "string") throw new ValidationError(`${op}: value must be a string`);
     const scope = this.#scope(op, options);
+    const tagIds = await this.#tagIds(op, scope.projectId, options);
     const data = await this.#api.secrets<unknown>((v) => ({
       method: "POST",
       path: this.#single(v, name),
@@ -283,7 +334,7 @@ export class SecretsApi {
         secretPath: scope.secretPath,
         secretValue: value,
         secretComment: options.comment,
-        tagIds: options.tagIds,
+        tagIds,
         type: options.type,
         skipMultilineEncoding: options.skipMultilineEncoding,
         secretMetadata: wireMetadata(options.metadata),
@@ -302,6 +353,7 @@ export class SecretsApi {
     requireText(name, "name", op);
     if (options.newName !== undefined) requireText(options.newName, "newName", op);
     const scope = this.#scope(op, options);
+    const tagIds = await this.#tagIds(op, scope.projectId, options);
     const data = await this.#api.secrets<unknown>((v) => ({
       method: "PATCH",
       path: this.#single(v, name),
@@ -313,7 +365,7 @@ export class SecretsApi {
         secretValue: options.value,
         newSecretName: options.newName,
         secretComment: options.comment,
-        tagIds: options.tagIds,
+        tagIds,
         type: options.type,
         skipMultilineEncoding: options.skipMultilineEncoding,
         secretMetadata: wireMetadata(options.metadata),
@@ -489,8 +541,6 @@ export class SecretsApi {
 
   /** Renders the secrets of a folder as a dotenv file (`KEY="value"` lines sorted by key). */
   async exportDotenv(options: EnvExportOptions = {}): Promise<string> {
-    const values = await this.#values(options);
-    const keys = [...values.keys()].sort();
-    return keys.map((k) => `${k}=${dotenvQuote(values.get(k) as string)}\n`).join("");
+    return formatDotenv(await this.#values(options));
   }
 }

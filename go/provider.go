@@ -34,8 +34,8 @@ type SecretsProviderOptions struct {
 // and returns the new version; values are UTF-8 text (other bytes are a
 // VALIDATION error) and Infisical trims surrounding whitespace. Versions are
 // the Infisical version numbers as strings. Delete is always permanent and
-// removes every version (DeleteOptions.Versions / Permanent are UNSUPPORTED,
-// as is SetOptions.CAS). SetOptions.Tags keys are tag slugs (created when
+// removes every version (DeleteOptions.Versions is UNSUPPORTED, as is
+// SetOptions.CAS; DeleteOptions.Permanent is accepted and has no effect). SetOptions.Tags keys are tag slugs (created when
 // missing, with the value as the color when it starts with "#");
 // SecretMetadata.Tags maps slug → name.
 type ProjectSecretsProvider struct {
@@ -290,7 +290,9 @@ func (p *infisicalPrimitives) ensureTags(ctx context.Context, tags map[string]st
 // RemoveSecret implements SecretPrimitives; a missing secret is NOT_FOUND.
 func (p *infisicalPrimitives) RemoveSecret(ctx context.Context, name string, opts DeleteOptions) error {
 	const op = "secrets.delete"
-	if len(opts.Versions) > 0 || opts.Permanent {
+	// Permanent is accepted (Infisical always deletes permanently); a zero
+	// Permanent cannot be told apart from "not set", so it is not rejected.
+	if len(opts.Versions) > 0 {
 		return UnsupportedError(op, "Infisical always deletes a secret permanently with all its versions")
 	}
 	path, key, err := p.locate(op, name, opts.Path)

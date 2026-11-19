@@ -414,21 +414,23 @@ async fn delete() {
         p.delete("GONE", None).await.unwrap_err().code(),
         ErrorCode::NotFound
     );
-    for opts in [
-        DeleteOptions {
-            versions: vec!["1".into()],
-            ..Default::default()
-        },
-        DeleteOptions {
-            permanent: true,
-            ..Default::default()
-        },
-    ] {
-        assert_eq!(
-            p.delete("KEY", Some(&opts)).await.unwrap_err().code(),
-            ErrorCode::Unsupported
-        );
-    }
+    let versions = DeleteOptions {
+        versions: vec!["1".into()],
+        ..Default::default()
+    };
+    assert_eq!(
+        p.delete("KEY", Some(&versions)).await.unwrap_err().code(),
+        ErrorCode::Unsupported
+    );
+    // permanent is accepted (Infisical always deletes permanently)
+    let permanent = DeleteOptions {
+        permanent: true,
+        ..Default::default()
+    };
+    assert_eq!(
+        p.delete("GONE", Some(&permanent)).await.unwrap_err().code(),
+        ErrorCode::NotFound
+    );
     assert!(p.delete("", None).await.is_err());
     assert!(p.delete("dir/", None).await.is_err());
 }

@@ -53,7 +53,7 @@ __all__ = ["InfisicalClient", "AsyncInfisicalClient", "PING_PATHS", "resolve_aut
 PING_PATHS: Mapping[str, str] = {
     "identity": "/api/v1/identities/details",
     "user": "/api/v2/users/me",
-    "service_token": "/api/v2/service-token",
+    "serviceToken": "/api/v2/service-token",
 }
 
 

@@ -1790,11 +1790,11 @@ public final class InfisicalClient implements AutoCloseable {
    * property or environment variable) are kept unless {@code override} is set.
    *
    * @param options selection, may be null
-   * @return the names of the variables set, sorted (never values)
+   * @return the variables set as env name to secret key, sorted by name (never values)
    */
-  public List<String> loadEnv(EnvOptions options) {
+  public Map<String, String> loadEnv(EnvOptions options) {
     EnvOptions o = or(options, EnvOptions.defaults());
-    List<String> set = new ArrayList<>();
+    Map<String, String> set = new TreeMap<>();
     envSecrets(o)
         .forEach(
             (k, v) -> {
@@ -1802,7 +1802,7 @@ public final class InfisicalClient implements AutoCloseable {
                 return;
               }
               o.target().set(k, v);
-              set.add(k);
+              set.put(k, k);
             });
     return set;
   }
@@ -1811,9 +1811,9 @@ public final class InfisicalClient implements AutoCloseable {
    * Asynchronous {@link #loadEnv(EnvOptions)}.
    *
    * @param options selection, may be null
-   * @return a future with the variable names
+   * @return a future with the variables set (env name to secret key)
    */
-  public CompletableFuture<List<String>> loadEnvAsync(EnvOptions options) {
+  public CompletableFuture<Map<String, String>> loadEnvAsync(EnvOptions options) {
     return async(() -> loadEnv(options));
   }
 

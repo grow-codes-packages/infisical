@@ -124,6 +124,19 @@ describe("InfisicalConfig", () => {
     expect(InfisicalConfig.fromEnv().url).toBeTypeOf("string");
   });
 
+  it("reads API_VERSION and REVOKE_ON_CLOSE; '' means auto", () => {
+    const c = InfisicalConfig.fromEnv(
+      {},
+      { GROW_INFISICAL_API_VERSION: "V3", GROW_INFISICAL_REVOKE_ON_CLOSE: "true" },
+    );
+    expect(c.apiVersion).toBe("v3");
+    expect(c.revokeOnClose).toBe(true);
+    expect(new InfisicalConfig({ apiVersion: "" }).apiVersion).toBe("auto");
+    expect(() => InfisicalConfig.fromEnv({}, { GROW_INFISICAL_API_VERSION: "v9" })).toThrow(
+      /apiVersion/,
+    );
+  });
+
   it("reads Universal Auth credentials incl. the CLI aliases", () => {
     const c = InfisicalConfig.fromEnv(
       {},

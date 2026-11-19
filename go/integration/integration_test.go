@@ -522,7 +522,7 @@ func TestImportsLoadEnvDotenv(t *testing.T) {
 	_ = os.Unsetenv(k1)
 	t.Setenv(k2, "keep")
 	names, err := f.c.LoadEnv(f.ctx, &infisical.EnvOptions{SecretPath: folder})
-	if err != nil || !slices.Contains(names, k1) || slices.Contains(names, k2) || os.Getenv(k1) != "one" || os.Getenv(k2) != "keep" || os.Getenv("SDK_COMMON") != "common-value-1" {
+	if err != nil || names[k1] != k1 || names[k2] != "" || os.Getenv(k1) != "one" || os.Getenv(k2) != "keep" || os.Getenv("SDK_COMMON") != "common-value-1" {
 		t.Fatalf("loadEnv: %v %v", err, names)
 	}
 	t.Cleanup(func() { _ = os.Unsetenv(k1); _ = os.Unsetenv("SDK_COMMON") })

@@ -163,6 +163,8 @@ class InfisicalClientTest {
     d.close();
     assertThatThrownBy(() -> InfisicalClient.builder().url("ftp://x").build())
         .isInstanceOf(ConfigException.class);
+    assertThat(InfisicalConfig.builder().apiVersion("Auto").build().apiVersion())
+        .isEqualTo(InfisicalConfig.API_VERSION_AUTO);
   }
 
   @Test

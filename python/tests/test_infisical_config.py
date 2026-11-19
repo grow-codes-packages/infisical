@@ -90,3 +90,14 @@ def test_core_redaction_config() -> None:
         assert secret in cfg.known_secrets()
     assert cfg.project_id is None
     assert isinstance(cfg.token, sdk.Secret)
+
+
+def test_api_version_and_revoke_on_close_from_env() -> None:
+    cfg = sdk.InfisicalConfig.from_env(
+        {"GROW_INFISICAL_API_VERSION": "V3", "GROW_INFISICAL_REVOKE_ON_CLOSE": "true"}
+    )
+    assert cfg.api_version == "v3"
+    assert cfg.revoke_on_close is True
+    assert sdk.InfisicalConfig(api_version="").api_version == "auto"  # type: ignore[arg-type]
+    with pytest.raises(sdk.ConfigError):
+        sdk.InfisicalConfig.from_env({"GROW_INFISICAL_API_VERSION": "v9"})

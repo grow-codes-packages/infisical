@@ -507,17 +507,18 @@ class IntegrationTest {
     assertEquals("common-value-1", list.merged().get("SDK_COMMON").value().reveal());
 
     Map<String, String> target = new HashMap<>(Map.of(k2, "keep"));
-    List<String> names =
+    Map<String, String> names =
         c.loadEnv(EnvOptions.builder().secretPath(folder).target(EnvLoader.map(target)).build());
-    assertTrue(names.contains(k1));
-    assertFalse(names.contains(k2));
+    assertEquals(k1, names.get(k1));
+    assertFalse(names.containsKey(k2));
     assertEquals("one", target.get(k1));
     assertEquals("keep", target.get(k2));
     assertEquals("common-value-1", target.get("SDK_COMMON"));
     // default target: system properties
     try {
-      List<String> props = c.loadEnvAsync(EnvOptions.builder().secretPath(folder).build()).get();
-      assertTrue(props.contains(k1));
+      Map<String, String> props =
+          c.loadEnvAsync(EnvOptions.builder().secretPath(folder).build()).get();
+      assertTrue(props.containsKey(k1));
       assertEquals("one", System.getProperty(k1));
     } finally {
       System.clearProperty(k1);
@@ -596,8 +597,9 @@ class IntegrationTest {
     assertThrows(NotFoundException.class, () -> p.delete("db/PASSWORD"));
     assertThrows(
         ValidationException.class, () -> p.set("BIN", new byte[] {(byte) 0xff}));
+    // permanent is accepted (Infisical always deletes permanently): the missing key is NOT_FOUND
     assertThrows(
-        UnsupportedException.class,
+        NotFoundException.class,
         () -> p.delete("X", DeleteOptions.builder().permanent(true).build()));
     assertEquals("/prov-" + run, p.basePath());
     assertNotNull(p.options());

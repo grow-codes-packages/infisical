@@ -44,8 +44,8 @@ pub struct SecretsProviderOptions {
 /// `set` creates missing folders, updates an existing secret and returns the new version;
 /// values are UTF-8 text (other bytes are a `VALIDATION` error) and Infisical trims
 /// surrounding whitespace. Versions are the Infisical version numbers as strings. Delete is
-/// always permanent and removes every version (`DeleteOptions::versions` / `permanent` are
-/// `UNSUPPORTED`, as is `SetOptions::cas`). `SetOptions::tags` keys are tag slugs (created
+/// always permanent and removes every version (`DeleteOptions::versions` is `UNSUPPORTED`, as
+/// is `SetOptions::cas`; `DeleteOptions::permanent` is accepted and has no effect). `SetOptions::tags` keys are tag slugs (created
 /// when missing, with the value as the color when it starts with `#`);
 /// `SecretMetadata::tags` maps slug → name (or slug).
 #[derive(Debug, Clone)]
@@ -400,7 +400,9 @@ impl SecretsProvider for ProjectSecretsProvider {
         const OP: &str = "secrets.delete";
         check_name(name)?;
         let opts = opts.cloned().unwrap_or_default();
-        if !opts.versions.is_empty() || opts.permanent {
+        // `permanent` is accepted (Infisical always deletes permanently); `false` is the
+        // default and cannot be told apart from "not set", so it is not rejected.
+        if !opts.versions.is_empty() {
             return Err(Error::unsupported(format!(
                 "{OP}: Infisical always deletes a secret permanently with all its versions"
             )));

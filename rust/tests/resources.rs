@@ -478,7 +478,11 @@ async fn load_env_and_export_dotenv() {
         ..Default::default()
     };
     let names = c.load_env_into(Some(&opts), &mut sink).await.unwrap();
-    assert_eq!(names, vec!["A", "B", "C"]);
+    assert_eq!(
+        names.keys().map(String::as_str).collect::<Vec<_>>(),
+        vec!["A", "B", "C"]
+    );
+    assert_eq!(names["A"], "A");
     assert_eq!(sink["A"], "one");
     assert_eq!(sink["C"], "three");
     assert_eq!(sink["KEEP"], "old");
@@ -492,7 +496,7 @@ async fn load_env_and_export_dotenv() {
         ..Default::default()
     };
     let names = c.load_env_into(Some(&over), &mut sink).await.unwrap();
-    assert!(names.contains(&"KEEP".to_owned()));
+    assert!(names.contains_key("KEEP"));
     assert_eq!(sink["KEEP"], "new");
     let r = &requests(&server, "/api/v4/secrets").await[1];
     assert_eq!(query(r, "includeImports").as_deref(), Some("false"));
@@ -522,7 +526,7 @@ async fn load_env_and_export_dotenv() {
     )
     .await;
     let names = client(&server).load_env(None).await.unwrap();
-    assert_eq!(names, vec![var.clone()]);
+    assert_eq!(names.into_keys().collect::<Vec<_>>(), vec![var.clone()]);
     assert_eq!(std::env::var(&var).unwrap(), "from-infisical");
     let server = MockServer::start().await;
     on(

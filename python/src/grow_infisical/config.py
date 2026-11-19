@@ -56,16 +56,17 @@ class InfisicalConfig(BaseConfig):
     * ``project_id``, ``environment`` (slug, e.g. ``dev``) and ``secret_path`` (``/``) — defaults
       of every call. A missing ``project_id``/``environment`` raises :class:`ConfigError` when a
       call needs it, not at construction.
-    * ``api_version`` — ``auto`` (v4, falling back to v3 when v4 is missing), ``v4`` or ``v3``.
+    * ``api_version`` — ``auto`` (v4, falling back to v3 when v4 is missing; ``""`` means
+      ``auto``), ``v4`` or ``v3``.
     * ``expand_secret_references`` / ``include_imports`` — read defaults (both ``True``).
     * ``revoke_on_close`` — revoke a login token in ``close()`` (``False``).
 
     Environment (``from_env``): ``GROW_INFISICAL_<NAME>`` first, then the vendor variables of
     :data:`VENDOR_ENV`. Names: ``URL`` (``INFISICAL_API_URL`` loses one trailing ``/api``),
     ``TOKEN``, ``CLIENT_ID``, ``CLIENT_SECRET``, ``PROJECT_ID``, ``ENVIRONMENT``,
-    ``SECRET_PATH``, ``CONNECT_TIMEOUT``, ``REQUEST_TIMEOUT``, ``TOTAL_TIMEOUT``,
-    ``MAX_RETRIES``, ``CA_CERT``, ``CLIENT_CERT``, ``CLIENT_KEY``, ``INSECURE_SKIP_VERIFY``,
-    ``PROXY``.
+    ``SECRET_PATH``, ``API_VERSION``, ``REVOKE_ON_CLOSE``, ``CONNECT_TIMEOUT``,
+    ``REQUEST_TIMEOUT``, ``TOTAL_TIMEOUT``, ``MAX_RETRIES``, ``CA_CERT``, ``CLIENT_CERT``,
+    ``CLIENT_KEY``, ``INSECURE_SKIP_VERIFY``, ``PROXY``.
     """
 
     ENV_VENDOR: ClassVar[Mapping[str, tuple[str, ...]]] = VENDOR_ENV
@@ -89,6 +90,10 @@ class InfisicalConfig(BaseConfig):
         for name in ("client_id", "organization_slug", "project_id", "environment"):
             if getattr(self, name) == "":
                 object.__setattr__(self, name, None)
+        if isinstance(self.api_version, str):
+            # "" is accepted as an alias of "auto" (the Go/Java spelling); case is ignored.
+            version = self.api_version.strip().lower() or "auto"
+            object.__setattr__(self, "api_version", version)
 
     def __repr__(self) -> str:
         # ``secret_path`` is a folder path, not a credential: show it.
@@ -120,6 +125,12 @@ class InfisicalConfig(BaseConfig):
         secret_path = reader.string("SECRET_PATH")
         if secret_path is not None:
             values["secret_path"] = secret_path
+        api_version = reader.string("API_VERSION")
+        if api_version is not None:
+            values["api_version"] = api_version
+        revoke = reader.bool("REVOKE_ON_CLOSE")
+        if revoke is not None:
+            values["revoke_on_close"] = revoke
         return values
 
     def validate(self: _C) -> _C:

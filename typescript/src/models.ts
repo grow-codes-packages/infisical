@@ -18,12 +18,6 @@ export interface Tag {
   updatedAt?: Date;
 }
 
-/** A key/value metadata entry of a secret. */
-export interface SecretMetadataEntry {
-  key: string;
-  value: string;
-}
-
 /** One secret as returned by the secrets API. */
 export interface InfisicalSecret {
   id: string;
@@ -39,7 +33,8 @@ export interface InfisicalSecret {
   secretPath: string;
   comment: string;
   tags: Tag[];
-  metadata: SecretMetadataEntry[];
+  /** Secret metadata (key → value). */
+  metadata: Record<string, string>;
   skipMultilineEncoding: boolean;
   createdAt?: Date;
   updatedAt?: Date;
@@ -174,10 +169,12 @@ export function parseSecret(raw: unknown): InfisicalSecret {
     secretPath: str(r.secretPath) === "" ? "/" : str(r.secretPath),
     comment: str(r.secretComment),
     tags: arr(r.tags).map(parseTag),
-    metadata: arr(r.secretMetadata).map((m) => {
-      const e = obj(m);
-      return { key: str(e.key), value: str(e.value) };
-    }),
+    metadata: Object.fromEntries(
+      arr(r.secretMetadata).map((m) => {
+        const e = obj(m);
+        return [str(e.key), str(e.value)];
+      }),
+    ),
     skipMultilineEncoding: r.skipMultilineEncoding === true,
   };
   return withDates(s, r);

@@ -115,6 +115,9 @@ func TestClientConfig(t *testing.T) {
 		if _, err := ConfigFromEnvWith(Config{}, map[string]string{EnvPrefix + "API_VERSION": "v1"}); !errors.Is(err, ErrConfig) {
 			t.Fatalf("api version: %v", err)
 		}
+		if cfg, err := ConfigFromEnvWith(Config{}, map[string]string{EnvPrefix + "API_VERSION": "Auto"}); err != nil || cfg.APIVersion != APIVersionAuto {
+			t.Fatalf("api version auto: %v %q", err, cfg.APIVersion)
+		}
 		if _, err := NewClient(Config{CommonConfig: CommonConfig{TLS: TLSConfig{CACertPEM: "not pem"}}}); !errors.Is(err, ErrConfig) {
 			t.Fatalf("tls: %v", err)
 		}

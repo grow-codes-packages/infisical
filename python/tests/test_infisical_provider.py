@@ -190,6 +190,11 @@ def test_name_model_and_set_creates_folders_and_tags() -> None:
             p.get("a/b/KEY", version="first")
         assert [m.name for m in p.list("a/b")] == ["a/b/KEY"]
         assert p.list("missing") == []
+        assert p.list("missing/") == []
+        assert p.list("nope/deeper/K") == []
+        # no folder "a/b/KEY" -> key prefix "KEY" inside folder "a/b"
+        assert [m.name for m in p.list("a/b/KE")] == ["a/b/KEY"]
+        assert p.list("a/b/ZZ") == []
         assert p.get_all("missing") == {}
         assert p.get_string("KEY", path="a/b") == "v2"
         with pytest.raises(sdk.UnsupportedError):

@@ -117,7 +117,15 @@ nav:
   - Quickstart: quickstart.md
   - Configuration: configuration.md
   - Client: client.md
-  - Functions: functions.md
+  - Functions:
+      - functions.md
+      - Auth: functions/auth.md
+      - Secrets API: functions/secrets-api.md
+      - Folders: functions/folders.md
+      - Projects and environments: functions/projects.md
+      - Tags and imports: functions/tags-imports.md
+      - Env injection: functions/env.md
+      - Secrets over Infisical: functions/secrets-provider.md
   - Secrets: secrets.md
   - Error handling: errors.md
   - Hooks and logger: hooks.md

@@ -257,8 +257,6 @@ class ProviderTest {
           .isInstanceOf(ValidationException.class);
       assertThatThrownBy(() -> p.set("K", "v", SetOptions.builder().cas(1).build()))
           .isInstanceOf(UnsupportedException.class);
-      assertThatThrownBy(() -> p.delete("K", DeleteOptions.builder().permanent(true).build()))
-          .isInstanceOf(UnsupportedException.class);
       assertThatThrownBy(() -> p.delete("K", DeleteOptions.builder().versions("1").build()))
           .isInstanceOf(UnsupportedException.class);
     }

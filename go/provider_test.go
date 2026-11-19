@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"os"
-	"sort"
-	"strings"
 	"testing"
 	"time"
 
@@ -131,8 +129,8 @@ func TestProviderModel(t *testing.T) {
 	if err := p.Delete(ctx, "app/db/USER", &infisical.DeleteOptions{Versions: []string{"1"}}); !errors.Is(err, infisical.ErrUnsupported) {
 		t.Fatalf("versions: %v", err)
 	}
-	if err := p.Delete(ctx, "app/db/USER", &infisical.DeleteOptions{Permanent: true}); !errors.Is(err, infisical.ErrUnsupported) {
-		t.Fatalf("permanent: %v", err)
+	if err := p.Delete(ctx, "app/db/NO_SUCH_KEY", &infisical.DeleteOptions{Permanent: true}); !errors.Is(err, infisical.ErrNotFound) {
+		t.Fatalf("permanent (accepted, then not found): %v", err)
 	}
 	if err := p.Delete(ctx, "dir/", nil); !errors.Is(err, infisical.ErrValidation) {
 		t.Fatalf("delete no key: %v", err)
@@ -285,8 +283,7 @@ func TestClientLoadEnvAndDotenv(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = os.Unsetenv("GROWLE_A"); _ = os.Unsetenv("GROWLE_B") })
-	sort.Strings(names)
-	if strings.Join(names, ",") != "GROWLE_A,GROWLE_B" || os.Getenv("GROWLE_C") != "keep" || os.Getenv("GROWLE_B") != "multi\nline" {
+	if len(names) != 2 || names["GROWLE_A"] != "GROWLE_A" || names["GROWLE_B"] != "GROWLE_B" || os.Getenv("GROWLE_C") != "keep" || os.Getenv("GROWLE_B") != "multi\nline" {
 		t.Fatalf("loadEnv: %v", names)
 	}
 	names, err = c.LoadEnv(ctx, &infisical.EnvOptions{Override: true})

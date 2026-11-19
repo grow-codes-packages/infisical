@@ -152,23 +152,51 @@ export class InfisicalSecretsProvider extends BaseSecretsProvider {
     return prefixOrPath === undefined ? this.basePath : joinPath(this.basePath, prefixOrPath);
   }
 
+  /**
+   * Lists the secrets directly under a folder. `prefixOrPath` is a folder below the base path
+   * (`app/` or `app`); when no such folder exists it is a key prefix inside its parent folder
+   * (`app/DB_` lists keys starting with `DB_` in `app`). A missing folder lists nothing.
+   */
   protected async listSecrets(
     prefixOrPath: string | undefined,
     options: SignalOptions,
   ): Promise<SecretMetadata[]> {
-    const secretPath = this.#folderPath(prefixOrPath);
+    const raw = prefixOrPath ?? "";
+    const rel = raw.replace(/^\/+|\/+$/g, "");
     try {
-      const list = await this.#secrets.listSecrets({
-        ...this.#opts({ secretPath, key: "" }, options.signal),
-        recursive: false,
-        includeImports: false,
-        viewSecretValue: false,
-      });
-      return list.secrets.map((s) => this.#metadata(this.nameOf(s.secretPath, s.key), s));
+      return await this.#listFolder(rel, "", options.signal);
+    } catch (err) {
+      if (!(err instanceof NotFoundError)) throw err;
+      if (rel === "" || raw.endsWith("/")) return [];
+    }
+    const cut = rel.lastIndexOf("/");
+    try {
+      return await this.#listFolder(
+        cut < 0 ? "" : rel.slice(0, cut),
+        rel.slice(cut + 1),
+        options.signal,
+      );
     } catch (err) {
       if (err instanceof NotFoundError) return [];
       throw err;
     }
+  }
+
+  async #listFolder(
+    rel: string,
+    keyPrefix: string,
+    signal: AbortSignal | undefined,
+  ): Promise<SecretMetadata[]> {
+    const secretPath = this.#folderPath(rel === "" ? undefined : rel);
+    const list = await this.#secrets.listSecrets({
+      ...this.#opts({ secretPath, key: "" }, signal),
+      recursive: false,
+      includeImports: false,
+      viewSecretValue: false,
+    });
+    return list.secrets
+      .filter((s) => s.key.startsWith(keyPrefix) && s.type !== "personal")
+      .map((s) => this.#metadata(this.nameOf(s.secretPath, s.key), s));
   }
 
   /** Every secret directly under `path` with one list call (imports per config). */

@@ -66,7 +66,8 @@ __all__ = [
     "sign_aws_request",
 ]
 
-TokenKind = Literal["identity", "user", "service_token"]
+TokenKind = Literal["identity", "user", "serviceToken"]
+"""Token kind (wire values shared by every language: ``identity``, ``user``, ``serviceToken``)."""
 """Principal kind of a token (selects the ``ping()`` route)."""
 
 #: Fraction of a token's lifetime after which it is renewed.
@@ -83,7 +84,7 @@ def detect_token_kind(token: str) -> TokenKind:
     """``st.…`` → legacy service token; a JWT with ``authTokenType: accessToken`` → user token;
     everything else → machine identity token."""
     if token.startswith("st."):
-        return "service_token"
+        return "serviceToken"
     parts = token.split(".")
     if len(parts) == 3:
         try:

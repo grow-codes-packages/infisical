@@ -678,7 +678,7 @@ async fn imports_load_env_dotenv() {
         }))
         .await
         .unwrap();
-    assert!(names.contains(&k1) && !names.contains(&k2));
+    assert!(names.get(&k1) == Some(&k1) && !names.contains_key(&k2));
     assert_eq!(std::env::var(&k1).unwrap(), "one");
     assert_eq!(std::env::var(&k2).unwrap(), "keep");
     assert_eq!(std::env::var("SDK_COMMON").unwrap(), "common-value-1");
@@ -698,7 +698,10 @@ async fn imports_load_env_dotenv() {
         )
         .await
         .unwrap();
-    assert_eq!(names, vec![k1.clone(), k2.clone()]);
+    assert_eq!(
+        names.into_keys().collect::<Vec<_>>(),
+        vec![k1.clone(), k2.clone()]
+    );
     assert_eq!(sink[&k2], "two\nlines");
     let doc = c
         .export_dotenv(Some(&EnvOptions {

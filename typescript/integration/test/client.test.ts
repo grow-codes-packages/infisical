@@ -197,6 +197,18 @@ describe("secrets (v4)", () => {
       tagged.secrets.map((s) => s.key),
       [key("RENAMED")],
     );
+    // tags by slug + metadata map round trip
+    const bySlug = await c.secrets.createSecret(key("SLUG"), "s", {
+      tagSlugs: [tag.slug],
+      metadata: { owner: "sdk" },
+    });
+    const slugged = await c.secrets.getSecret(bySlug.key);
+    assert.deepEqual(
+      slugged.tags.map((t) => t.slug),
+      [tag.slug],
+    );
+    assert.deepEqual(slugged.metadata, { owner: "sdk" });
+    await c.secrets.deleteSecret(bySlug.key);
 
     // versions: user tokens only; identities get PERMISSION_DENIED
     const user = tokenClient(env("INFISICAL_USER_TOKEN"));

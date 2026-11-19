@@ -13,7 +13,8 @@ const DefaultSecretPath = "/"
 
 // Secrets API versions accepted by Config.APIVersion.
 const (
-	// APIVersionAuto detects the highest secrets API version at run time (v4, falling back to v3).
+	// APIVersionAuto detects the highest secrets API version at run time (v4,
+	// falling back to v3). "auto" is accepted as an alias.
 	APIVersionAuto = ""
 	// APIVersionV4 forces the v4 secrets API (/api/v4/secrets).
 	APIVersionV4 = "v4"
@@ -46,7 +47,7 @@ var (
 //	ProjectID      GROW_INFISICAL_PROJECT_ID, INFISICAL_PROJECT_ID
 //	Environment    GROW_INFISICAL_ENVIRONMENT, INFISICAL_ENVIRONMENT
 //	SecretPath     GROW_INFISICAL_SECRET_PATH (default "/")
-//	APIVersion     GROW_INFISICAL_API_VERSION ("", "v4" or "v3")
+//	APIVersion     GROW_INFISICAL_API_VERSION ("auto" or "", "v4" or "v3")
 //	RevokeOnClose  GROW_INFISICAL_REVOKE_ON_CLOSE
 //
 // plus the common GROW_INFISICAL_CONNECT_TIMEOUT, REQUEST_TIMEOUT, TOTAL_TIMEOUT,
@@ -77,8 +78,8 @@ type Config struct {
 	Environment string
 	// SecretPath is the default secret path (default "/").
 	SecretPath string
-	// APIVersion forces the secrets API version ("v4" or "v3"); empty detects
-	// it at run time (v4 first, v3 only when the server lacks the v4 route).
+	// APIVersion forces the secrets API version ("v4" or "v3"); empty or "auto"
+	// detects it at run time (v4 first, v3 only when the server lacks the v4 route).
 	APIVersion string
 	// RevokeOnClose revokes a token the client obtained by logging in
 	// (Universal, Kubernetes or AWS auth) when Close is called. Static tokens
@@ -144,7 +145,7 @@ func (c Config) normalized() Config {
 	u = strings.TrimSuffix(u, "/api")
 	c.URL = u
 	c.SecretPath = normalizePath(c.SecretPath)
-	c.APIVersion = strings.ToLower(strings.TrimSpace(c.APIVersion))
+	c.APIVersion = normalizeAPIVersion(c.APIVersion)
 	return c
 }
 
@@ -153,10 +154,10 @@ func (c Config) Validate() error {
 	if err := c.withDefaults(DefaultURL).validate(); err != nil {
 		return err
 	}
-	switch strings.ToLower(strings.TrimSpace(c.APIVersion)) {
+	switch normalizeAPIVersion(c.APIVersion) {
 	case APIVersionAuto, APIVersionV4, APIVersionV3:
 	default:
-		return ConfigError(`apiVersion must be "", "v4" or "v3"`)
+		return ConfigError(`apiVersion must be "auto" (or ""), "v4" or "v3"`)
 	}
 	if c.Auth == nil && c.Token.IsZero() && (c.ClientID == "") != c.ClientSecret.IsZero() {
 		return ConfigError("clientId and clientSecret must be given together")
@@ -165,6 +166,15 @@ func (c Config) Validate() error {
 		return ConfigError("environment must be an environment slug")
 	}
 	return nil
+}
+
+// normalizeAPIVersion lower-cases the version and maps "auto" to APIVersionAuto ("").
+func normalizeAPIVersion(v string) string {
+	v = strings.ToLower(strings.TrimSpace(v))
+	if v == "auto" {
+		return APIVersionAuto
+	}
+	return v
 }
 
 // authMethod returns the Authenticator the configuration selects (nil: none).

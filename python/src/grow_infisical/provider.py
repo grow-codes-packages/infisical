@@ -140,18 +140,36 @@ class _ProviderCore(_SecretOps):
         return self._metadata(s)
 
     def list_op(self, prefix_or_path: str | None) -> Op[builtins.list[SecretMetadata]]:
+        """List a folder below the base path (``app/`` or ``app``); when no such folder exists
+        the last segment is a key prefix inside its parent (``app/DB_`` lists keys starting with
+        ``DB_`` in ``app``). A missing folder lists nothing."""
+        raw = prefix_or_path or ""
+        rel = raw.strip("/")
         try:
-            listed = yield from self._list_secrets(
-                project_id=self.project_id,
-                environment=self.environment,
-                secret_path=self._folder(prefix_or_path),
-                recursive=False,
-                include_imports=False,
-                view_secret_value=False,
-            )
+            return (yield from self._list_folder(rel, ""))
+        except NotFoundError:
+            if not rel or raw.endswith("/"):
+                return []
+        folder, _, key_prefix = rel.rpartition("/")
+        try:
+            return (yield from self._list_folder(folder, key_prefix))
         except NotFoundError:
             return []
-        return [self._metadata(s) for s in listed.secrets]
+
+    def _list_folder(self, rel: str, key_prefix: str) -> Op[builtins.list[SecretMetadata]]:
+        listed = yield from self._list_secrets(
+            project_id=self.project_id,
+            environment=self.environment,
+            secret_path=self._folder(rel or None),
+            recursive=False,
+            include_imports=False,
+            view_secret_value=False,
+        )
+        return [
+            self._metadata(s)
+            for s in listed.secrets
+            if s.key.startswith(key_prefix) and s.type != "personal"
+        ]
 
     def get_all_op(self, path: str | None) -> Op[dict[str, SecretValue]]:
         folder = self._folder(path)

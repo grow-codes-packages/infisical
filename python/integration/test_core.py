@@ -24,7 +24,7 @@ def test_ping_per_token_kind(env: dict[str, str], client: sdk.InfisicalClient) -
     assert client.ping() >= 0
     for name, kind in (
         ("INFISICAL_USER_TOKEN", "user"),
-        ("INFISICAL_SERVICE_TOKEN", "service_token"),
+        ("INFISICAL_SERVICE_TOKEN", "serviceToken"),
         ("INFISICAL_VIEWER_TOKEN", "identity"),
     ):
         with token_client(env, env[name]) as c:

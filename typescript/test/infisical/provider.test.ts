@@ -50,6 +50,11 @@ describe("InfisicalSecretsProvider", () => {
     expect(meta?.createdAt).toBeInstanceOf(Date);
     expect((await scoped.list("x/y")).map((m) => m.name)).toEqual(["x/y/K"]);
     expect(await scoped.list("missing")).toEqual([]);
+    expect(await scoped.list("missing/")).toEqual([]);
+    expect(await scoped.list("nope/deeper/K")).toEqual([]);
+    // no folder "x/y/K" → key prefix "K" inside folder "x/y"
+    expect((await scoped.list("x/y/K")).map((m) => m.name)).toEqual(["x/y/K"]);
+    expect(await scoped.list("x/y/Z")).toEqual([]);
     expect((await scoped.getAll("missing")).size).toBe(0);
     await expect(scoped.get("x/y/K", { version: "abc" })).rejects.toMatchObject({
       code: "VALIDATION",

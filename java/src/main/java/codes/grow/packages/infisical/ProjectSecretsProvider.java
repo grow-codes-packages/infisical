@@ -33,10 +33,10 @@ import java.util.TreeMap;
  * returns the new version; values are UTF-8 text (other bytes are a {@link ValidationException})
  * and Infisical trims surrounding whitespace. Versions are the Infisical version numbers as
  * strings. {@code delete} is always permanent and removes every version ({@code
- * DeleteOptions.versions} / {@code permanent} and {@code SetOptions.cas} are {@link
- * UnsupportedException}). {@code SetOptions.tags} keys are tag slugs (created when missing, with
- * the value as the color when it starts with {@code #}); {@code SecretMetadata.tags} maps slug to
- * name.
+ * DeleteOptions.versions} and {@code SetOptions.cas} are {@link UnsupportedException}; {@code
+ * DeleteOptions.permanent} is accepted and has no effect). {@code SetOptions.tags} keys are tag
+ * slugs (created when missing, with the value as the color when it starts with {@code #}); {@code
+ * SecretMetadata.tags} maps slug to name.
  */
 public final class ProjectSecretsProvider extends BaseSecretsProvider {
   private final InfisicalClient client;
@@ -314,7 +314,9 @@ public final class ProjectSecretsProvider extends BaseSecretsProvider {
   @Override
   protected void removeSecret(String name, DeleteOptions opts) {
     String op = "secrets.delete";
-    if (!opts.versions().isEmpty() || opts.permanent()) {
+    // permanent is accepted (Infisical always deletes permanently); false is the default and
+    // cannot be told apart from "not set", so it is not rejected.
+    if (!opts.versions().isEmpty()) {
       throw new UnsupportedException(
           op + ": Infisical always deletes a secret permanently with all its versions");
     }

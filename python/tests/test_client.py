@@ -10,7 +10,7 @@ import httpx
 import pytest
 
 import grow_infisical as sdk
-from _support import MockServer, Reply, closed_port_url, make_config
+from _support import MockServer, Reply, closed_port_url, make_config, spawn_capturing
 from infisical_support import Router, aclient, client, fixture, reply
 
 TOKEN = "client-token-789"
@@ -212,11 +212,13 @@ async def test_async_health_unreachable() -> None:
 async def test_async_health_cancel(server: MockServer) -> None:
     server.enqueue(STATUS, Reply(200, delay=2.0))
     c = areal(server.url)
-    task = asyncio.ensure_future(c.health())
+    errors: list[BaseException] = []
+    task = spawn_capturing(c.health(), errors)
     await asyncio.sleep(0.1)
     task.cancel()
-    with pytest.raises(sdk.CancelledError):
+    with pytest.raises(asyncio.CancelledError):
         await task
+    assert isinstance(errors[0], sdk.CancelledError)
     await c.aclose()
 
 
@@ -224,7 +226,7 @@ async def test_async_ping_routes() -> None:
     router = Router().add("GET", "/api/v2/service-token", "ping.serviceToken")
     async with aclient(router, auth=sdk.TokenAuth("st.a.b")) as c:
         assert await c.ping() >= 0
-        assert c.auth is not None and c.auth.token_kind == "service_token"
+        assert c.auth is not None and c.auth.token_kind == "serviceToken"
 
 
 def test_non_json_success_body() -> None:

@@ -43,9 +43,9 @@ func (c *Client) envSecrets(ctx context.Context, o EnvOptions) (map[string]strin
 
 // LoadEnv sets one process environment variable per secret of a path (like
 // "infisical run"): the variable name is the secret key unchanged. Existing
-// variables are kept unless Override is set. It returns the names of the
-// variables it set, sorted (never values).
-func (c *Client) LoadEnv(ctx context.Context, opts *EnvOptions) ([]string, error) {
+// variables are kept unless Override is set. It returns the variables it set
+// as env name → secret key (never values), like SecretsProvider.LoadEnv.
+func (c *Client) LoadEnv(ctx context.Context, opts *EnvOptions) (map[string]string, error) {
 	var o EnvOptions
 	if opts != nil {
 		o = *opts
@@ -54,16 +54,15 @@ func (c *Client) LoadEnv(ctx context.Context, opts *EnvOptions) ([]string, error
 	if err != nil {
 		return nil, err
 	}
-	keys := sortedKeys(values)
-	set := make([]string, 0, len(keys))
-	for _, k := range keys {
+	set := make(map[string]string, len(values))
+	for _, k := range sortedKeys(values) {
 		if _, exists := os.LookupEnv(k); exists && !o.Override {
 			continue
 		}
 		if err := os.Setenv(k, values[k]); err != nil {
 			return set, ValidationError("loadEnv", "variable "+k+" cannot be set")
 		}
-		set = append(set, k)
+		set[k] = k
 	}
 	return set, nil
 }

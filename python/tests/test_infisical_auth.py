@@ -232,7 +232,7 @@ def test_constructor_validation() -> None:
 
 
 def test_token_kinds() -> None:
-    assert sdk.detect_token_kind("st.a.b") == "service_token"
+    assert sdk.detect_token_kind("st.a.b") == "serviceToken"
     user = (
         "h."
         + base64.urlsafe_b64encode(b'{"authTokenType":"accessToken"}').decode().rstrip("=")

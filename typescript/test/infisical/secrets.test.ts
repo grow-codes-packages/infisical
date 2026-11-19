@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { ConfigError, ValidationError, dotenvQuote } from "../../src/index.js";
+import { ConfigError, ValidationError, dotenvQuote, formatDotenv } from "../../src/index.js";
 import { PROJECT, bodyOf, cleanup, clientFor, queryOf, reply, routed } from "./helpers.js";
 
 afterEach(cleanup);
@@ -120,7 +120,7 @@ describe("secrets v4", () => {
       tagIds: ["t1"],
       type: "shared",
       skipMultilineEncoding: true,
-      metadata: [{ key: "k", value: "v" }],
+      metadata: { k: "v" },
     });
     expect(created.version).toBe(1);
     expect(bodyOf(s.requests[0]!)).toEqual({
@@ -179,7 +179,7 @@ describe("secrets v4", () => {
         comment: "c",
         tagIds: ["t"],
         skipMultilineEncoding: false,
-        metadata: [],
+        metadata: {},
       },
     ]);
     expect(created.map((x) => x.key).sort()).toEqual(["B1_49LJ3988", "B2_49LJ3988"]);
@@ -201,7 +201,7 @@ describe("secrets v4", () => {
           tagIds: [],
           secretPath: "x",
           skipMultilineEncoding: true,
-          metadata: [],
+          metadata: {},
         },
       ],
       { mode: "upsert" },
@@ -333,7 +333,41 @@ describe("secrets v4", () => {
     } finally {
       delete process.env.GROW_TS_UNIT_LOADENV;
     }
-    expect(dotenvQuote("a\r\nb")).toBe('"a\\nb"');
+    expect(dotenvQuote("a\r\nb\rc")).toBe('"a\\r\\nb\\rc"');
+    expect(formatDotenv({ Z: "1", Y: 'q"' })).toBe('Y="q\\""\nZ="1"\n');
+    expect(formatDotenv(new Map([["A", "x"]]))).toBe('A="x"\n');
+  });
+
+  it("createSecret / updateSecret resolve tagSlugs and map metadata", async () => {
+    const s = await routed({
+      [`GET /api/v1/projects/${PROJECT}/tags`]: reply("listTags.ok"),
+      "POST /api/v4/secrets/TAGGED": reply("createSecret.ok", (b) => {
+        b.secret.secretMetadata = [
+          { key: "b", value: "2" },
+          { key: "a", value: "1" },
+        ];
+        return b;
+      }),
+      "PATCH /api/v4/secrets/TAGGED": reply("updateSecret.renameCommentTags"),
+    });
+    const c = clientFor(s);
+    const created = await c.secrets.createSecret("TAGGED", "v", {
+      tagIds: ["x"],
+      tagSlugs: ["t-49lj3988"],
+      metadata: { b: "2", a: "1" },
+    });
+    expect(created.metadata).toEqual({ a: "1", b: "2" });
+    const body = bodyOf(s.requests[1]!);
+    expect(body.tagIds).toEqual(["x", "8ec93966-db51-4801-a143-26296a09c05c"]);
+    expect(body.secretMetadata).toEqual([
+      { key: "a", value: "1" },
+      { key: "b", value: "2" },
+    ]);
+    await c.secrets.updateSecret("TAGGED", { tagSlugs: [] });
+    expect(bodyOf(s.requests[2]!).tagIds).toEqual([]);
+    await expect(c.secrets.updateSecret("TAGGED", { tagSlugs: ["nope"] })).rejects.toMatchObject({
+      code: "NOT_FOUND",
+    });
   });
 });
 

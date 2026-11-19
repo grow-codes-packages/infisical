@@ -1,13 +1,19 @@
 # Quickstart
 
-Connect to Infisical, check that it is healthy, make an authenticated call and close the client.
-The client reads `GROW_INFISICAL_URL` and `GROW_INFISICAL_TOKEN` (and the vendor variables
-listed in [Configuration](configuration.md)), or takes the values in code.
+Connect to Infisical with a machine identity, check that it is healthy, read a secret and close
+the client. The client reads its settings from the environment (see
+[Functions → Service configuration](functions.md#service-configuration)) or takes them in code.
 
 ```sh
-export GROW_INFISICAL_URL=http://127.0.0.1:8080
-export GROW_INFISICAL_TOKEN=...   # never commit real tokens
+export GROW_INFISICAL_URL=http://127.0.0.1:8080      # or INFISICAL_API_URL=https://…/api
+export INFISICAL_CLIENT_ID=...                       # Universal Auth machine identity
+export INFISICAL_CLIENT_SECRET=...                   # never commit real credentials
+export INFISICAL_PROJECT_ID=...
+export INFISICAL_ENVIRONMENT=dev
 ```
+
+With `INFISICAL_TOKEN` (an access token, a user JWT or a legacy `st.` service token) instead of the
+client id and secret, the token is used as it is and never refreshed.
 
 === "TypeScript"
 
@@ -16,10 +22,12 @@ export GROW_INFISICAL_TOKEN=...   # never commit real tokens
 
     const client = InfisicalClient.fromEnv();
     try {
-      const health = await client.health();
+      const health = await client.health();          // never throws for an unreachable server
       console.log("healthy:", health.healthy, health.status);
-      console.log("ping:", await client.ping(), "ms");
-      console.log("server version:", await client.serverVersion());
+      console.log("ping:", await client.ping(), "ms"); // logs in with Universal Auth
+      const url = await client.provider.getString("DATABASE_URL"); // null when missing
+      const secret = await client.secrets.getSecret("DATABASE_URL"); // raw API: version, tags, …
+      console.log(secret.key, secret.version, url !== null);
     } finally {
       await client.close();
     }
@@ -28,6 +36,7 @@ export GROW_INFISICAL_TOKEN=...   # never commit real tokens
 === "Rust"
 
     ```rust
+    use grow_infisical::secrets::SecretsProvider;
     use grow_infisical::InfisicalClient;
 
     #[tokio::main]
@@ -36,7 +45,9 @@ export GROW_INFISICAL_TOKEN=...   # never commit real tokens
         let health = client.health().await?;
         println!("healthy: {} {}", health.healthy, health.status);
         println!("ping: {:?}", client.ping().await?);
-        println!("server version: {}", client.server_version().await?);
+        let url = client.secrets().get_string("DATABASE_URL", None).await?; // None when missing
+        let secret = client.get_secret("DATABASE_URL", None).await?;
+        println!("{} v{} {}", secret.key, secret.version, url.is_some());
         client.close().await;
         Ok(())
     }
@@ -59,7 +70,7 @@ export GROW_INFISICAL_TOKEN=...   # never commit real tokens
         ctx := context.Background()
         client, err := infisical.NewClientFromEnv()
         if err != nil {
-            log.Fatal(err)
+            log.Fatal(err) // CONFIG error naming the variable, never its value
         }
         defer client.Close()
 
@@ -68,18 +79,15 @@ export GROW_INFISICAL_TOKEN=...   # never commit real tokens
             log.Fatal(err)
         }
         fmt.Println("healthy:", health.Healthy, health.Status)
-
-        latency, err := client.Ping(ctx)
+        url, ok, err := client.Secrets().GetString(ctx, "DATABASE_URL", nil)
         if err != nil {
             log.Fatal(err)
         }
-        fmt.Println("ping:", latency)
-
-        version, err := client.ServerVersion(ctx)
+        secret, err := client.GetSecret(ctx, "DATABASE_URL", nil)
         if err != nil {
             log.Fatal(err)
         }
-        fmt.Println("server version:", version)
+        fmt.Println(secret.Key, secret.Version, ok, len(url) > 0)
     }
     ```
 
@@ -92,42 +100,30 @@ export GROW_INFISICAL_TOKEN=...   # never commit real tokens
         health = client.health()
         print("healthy:", health.healthy, health.status)
         print("ping:", client.ping(), "ms")
-        print("server version:", client.server_version())
+        url = client.provider.get_string("DATABASE_URL")  # None when missing
+        secret = client.secrets.get_secret("DATABASE_URL")
+        print(secret.key, secret.version, url is not None)
     ```
 
-    Async code uses `AsyncInfisicalClient` with the same methods:
-
-    ```python
-    import asyncio
-    from grow_infisical import AsyncInfisicalClient
-
-    async def main() -> None:
-        async with AsyncInfisicalClient.from_env() as client:
-            print(await client.health())
-
-    asyncio.run(main())
-    ```
+    Async code uses `AsyncInfisicalClient` with the same methods (`async with`, `await`).
 
 === "Java"
 
     ```java
     import codes.grow.packages.infisical.InfisicalClient;
-    import codes.grow.packages.infisical.core.HealthStatus;
+    import codes.grow.packages.infisical.SecretEntry;
+    import java.util.Optional;
 
-    public final class Quickstart {
-      public static void main(String[] args) {
-        try (InfisicalClient client = InfisicalClient.fromEnv()) {
-          HealthStatus health = client.health();
-          System.out.println("healthy: " + health.healthy() + " " + health.status());
-          System.out.println("ping: " + client.ping().toMillis() + " ms");
-          System.out.println("server version: " + client.serverVersion());
-        }
-      }
+    try (InfisicalClient client = InfisicalClient.fromEnv()) {
+        var health = client.health();
+        System.out.println("healthy: " + health.healthy() + " " + health.status());
+        System.out.println("ping: " + client.ping());
+        Optional<String> url = client.secrets().getString("DATABASE_URL");
+        SecretEntry secret = client.getSecret("DATABASE_URL");
+        System.out.println(secret.key() + " v" + secret.version() + " " + url.isPresent());
     }
     ```
 
-## Next steps
-
-- [Configuration](configuration.md): timeouts, retries, TLS, proxy, environment variables.
-- [Functions](functions.md): the Infisical API of this SDK.
-- [Error handling](errors.md): error codes and retries.
+Next: the [Functions](functions.md) pages show every call with an example per language, and
+[Error handling](errors.md) lists the error codes. `serverVersion()` always raises `UNSUPPORTED`:
+Infisical does not report its version over the API.
