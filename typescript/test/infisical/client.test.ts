@@ -93,14 +93,14 @@ describe("InfisicalClient core", () => {
     expect(s.requests).toHaveLength(0);
   });
 
-  it("core.close.idempotent: close twice; calls after close are CONFIG", async () => {
+  it("core.close.idempotent: close twice; calls after close are CANCELLED", async () => {
     const s = await routed({ "GET /api/status": reply("health.ok") });
     const c = new InfisicalClient({ url: s.url });
     const w = c.provider.watch("X", 1000, () => undefined);
     await c.close();
     await c.close();
     expect(w.stopped).toBe(true);
-    await expect(c.ping()).rejects.toMatchObject({ code: "CONFIG" });
+    await expect(c.ping()).rejects.toMatchObject({ code: "CANCELLED" });
   });
 
   it("uses Universal Auth from clientId/clientSecret; explicit auth and token win", async () => {
