@@ -162,7 +162,7 @@ export class InfisicalSecretsProvider extends BaseSecretsProvider {
     options: SignalOptions,
   ): Promise<SecretMetadata[]> {
     const raw = prefixOrPath ?? "";
-    const rel = raw.replace(/^\/+|\/+$/g, "");
+    const rel = trimSlashes(raw);
     try {
       return await this.#listFolder(rel, "", options.signal);
     } catch (err) {
@@ -318,4 +318,14 @@ export class InfisicalSecretsProvider extends BaseSecretsProvider {
     const loc = this.locate(name, options.path);
     await this.#secrets.deleteSecret(loc.key, this.#opts(loc, options.signal));
   }
+}
+
+/** Strips leading and trailing slashes. */
+function trimSlashes(value: string): string {
+  // Linear scan: a /^\/+|\/+$/g regex backtracks polynomially on long runs of "/".
+  let start = 0;
+  let end = value.length;
+  while (start < end && value.charCodeAt(start) === 47) start += 1;
+  while (end > start && value.charCodeAt(end - 1) === 47) end -= 1;
+  return value.slice(start, end);
 }
