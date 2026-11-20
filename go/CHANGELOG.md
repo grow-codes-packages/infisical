@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/grow-codes-packages/infisical/compare/go/v0.1.1...go/v0.2.0) (2026-11-20)
+
+
+### Features
+
+* sync infisical to sdk-kit 0.4.0 (foundation API) ([#17](https://github.com/grow-codes-packages/infisical/issues/17)) ([66ad8be](https://github.com/grow-codes-packages/infisical/commit/66ad8be8ec4ace3e3af33d91eb12ff19170748ea))
+
 ## [0.1.1](https://github.com/grow-codes-packages/infisical/compare/go/v0.1.0...go/v0.1.1) (2026-11-19)
 
 
