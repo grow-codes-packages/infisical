@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/grow-codes-packages/infisical/compare/typescript-v0.2.0...typescript-v0.2.1) (2026-11-25)
+
+
+### Bug Fixes
+
+* loadConfig() connector returns the Infisical SecretsProvider (GRO-1410) ([#20](https://github.com/grow-codes-packages/infisical/issues/20)) ([0b35840](https://github.com/grow-codes-packages/infisical/commit/0b35840c16d03a26818c551116048d2cff4e9f59))
+
 ## [0.2.0](https://github.com/grow-codes-packages/infisical/compare/typescript-v0.1.2...typescript-v0.2.0) (2026-11-20)
 
 
