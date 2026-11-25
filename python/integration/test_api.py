@@ -254,3 +254,25 @@ def test_provider_set_creates_folders_and_tags(client: sdk.InfisicalClient) -> N
     for tag in client.tags.list_tags():
         if tag.slug == f"prov-{RUN.lower()}":
             client.tags.delete_tag(tag.id)
+
+
+def test_load_config_through_the_connector(
+    env: dict[str, str], client: sdk.InfisicalClient
+) -> None:
+    """GRO-1410: ``load_config()`` with the default connector reads ``GROW_SECRETS_PATH``."""
+    base = f"py-lc-{RUN.lower()}"
+    client.provider.set(f"{base}/svc/DATABASE_URL", "postgres://db")
+    client.provider.set(f"{base}/svc/LOG_LEVEL", "debug")
+    # GROW_SECRETS_ADDR must win over GROW_INFISICAL_URL; credentials, project and environment
+    # come from the package variables in the same environment (Universal Auth).
+    target = {
+        **env,
+        "GROW_SECRETS_PROVIDER": "infisical",
+        "GROW_SECRETS_ADDR": env["GROW_INFISICAL_URL"],
+        "GROW_SECRETS_PATH": f"{base}/svc",
+        "GROW_INFISICAL_URL": "http://127.0.0.1:1",
+    }
+    values = sdk.load_config(["DATABASE_URL"], env=target)
+    assert values == {"DATABASE_URL": "postgres://db", "LOG_LEVEL": "debug"}
+    assert target["DATABASE_URL"] == "postgres://db"
+    client.folders.delete_folder(base, force_delete=True)

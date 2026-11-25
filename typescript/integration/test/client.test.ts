@@ -11,6 +11,7 @@ import {
   type InfisicalConfigOptions,
   InfisicalError,
   KubernetesAuth,
+  loadConfig,
   TokenAuth,
   UniversalAuth,
 } from "@grow-codes/infisical";
@@ -458,5 +459,27 @@ describe("SecretsProvider", () => {
     await p.delete("app/PORT");
     assert.equal(await p.get("app/DB_HOST"), null);
     await rejectsWith(p.delete("app/DB_HOST"), "NOT_FOUND");
+  });
+});
+
+describe("loadConfig", () => {
+  test("reads GROW_SECRETS_PATH through the default connector (GRO-1410)", async () => {
+    const base = `lc-${RUN.toLowerCase()}`;
+    const p = client().provider;
+    await p.set(`${base}/svc/DATABASE_URL`, "postgres://db");
+    await p.set(`${base}/svc/LOG_LEVEL`, "debug");
+    // GROW_SECRETS_ADDR must win over GROW_INFISICAL_URL; credentials, project and environment
+    // come from the package variables in the same environment (Universal Auth).
+    const target: Record<string, string | undefined> = {
+      ...process.env,
+      GROW_SECRETS_PROVIDER: "infisical",
+      GROW_SECRETS_ADDR: env("GROW_INFISICAL_URL"),
+      GROW_SECRETS_PATH: `${base}/svc`,
+      GROW_INFISICAL_URL: "http://127.0.0.1:1",
+    };
+    const values = await loadConfig({ env: target, required: ["DATABASE_URL"] });
+    assert.deepEqual(values, { DATABASE_URL: "postgres://db", LOG_LEVEL: "debug" });
+    assert.equal(target.DATABASE_URL, "postgres://db");
+    await client().folders.deleteFolder(base, { forceDelete: true });
   });
 });
