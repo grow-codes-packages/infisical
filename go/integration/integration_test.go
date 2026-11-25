@@ -607,3 +607,40 @@ func TestSecretsProvider(t *testing.T) {
 		}
 	}
 }
+
+// TestLoadConfig (GRO-1410): LoadConfig with the default connector reads GROW_SECRETS_PATH; the
+// address comes from GROW_SECRETS_ADDR (it wins over GROW_INFISICAL_URL), credentials, project
+// and environment from the package variables of the same environment (Universal Auth).
+func TestLoadConfig(t *testing.T) {
+	f := setup(t)
+	base := "lc-" + f.run
+	p := f.c.Secrets()
+	for k, v := range map[string]string{"DATABASE_URL": "postgres://db", "LOG_LEVEL": "debug"} {
+		if _, err := p.Set(f.ctx, base+"/svc/"+k, v, nil); err != nil {
+			t.Fatalf("seed %s: %v", k, err)
+		}
+	}
+	env := map[string]string{}
+	for _, kv := range os.Environ() {
+		if k, v, ok := strings.Cut(kv, "="); ok {
+			env[k] = v
+		}
+	}
+	env["GROW_SECRETS_PROVIDER"] = "infisical"
+	env["GROW_SECRETS_ADDR"] = os.Getenv("GROW_INFISICAL_URL")
+	env["GROW_SECRETS_PATH"] = base + "/svc"
+	env["GROW_INFISICAL_URL"] = "http://127.0.0.1:1"
+	values, err := infisical.LoadConfig(f.ctx, infisical.LoadOptions{Env: env, Required: []string{"DATABASE_URL"}, IntoEnv: true})
+	if err != nil {
+		t.Fatalf("LoadConfig: %v", err)
+	}
+	if len(values) != 2 || values["DATABASE_URL"] != "postgres://db" || values["LOG_LEVEL"] != "debug" {
+		t.Fatalf("values = %v", values)
+	}
+	if env["DATABASE_URL"] != "postgres://db" {
+		t.Fatalf("env not written")
+	}
+	if _, err := f.c.DeleteFolder(f.ctx, base, &infisical.DeleteFolderOptions{Force: true}); err != nil {
+		t.Fatalf("cleanup: %v", err)
+	}
+}

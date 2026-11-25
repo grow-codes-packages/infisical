@@ -1,35 +1,27 @@
 // Service-owned: generated once by sdk-kit, then maintained in this repository.
 // Connector used by `loadConfig()` (secrets/load-config.ts): builds a client from the
-// `GROW_SECRETS_*` bootstrap and the package's own environment variables, logs in when the
-// service needs it, and returns the SecretsProvider to read the config keys from.
+// `GROW_SECRETS_*` bootstrap and the package's own environment variables and returns the
+// SecretsProvider to read the config keys from.
 
-import { UnsupportedError } from "./core/index.js";
 import { InfisicalClient } from "./client.js";
-import type { SecretsProvider } from "./secrets/types.js";
+import { InfisicalConfig } from "./config.js";
 import type { SecretsBootstrap, SecretsConnection } from "./secrets/load-config.js";
 
-/** A client that exposes its SecretsProvider as `secrets()` (the sdk-kit convention). */
-interface WithSecrets {
-  secrets?: () => SecretsProvider;
-  secretsProvider?: () => SecretsProvider;
-}
-
 /**
- * Connects to Infisical for `loadConfig()`. The default builds `InfisicalClient.fromEnv()` (the
- * address comes from `GROW_SECRETS_ADDR` when set) and uses `client.secrets()` (or `secretsProvider()`). Services that log in
- * (AppRole, …) replace this function.
+ * Connects to Infisical for `loadConfig()`. Builds the client from the package's own variables
+ * (`GROW_INFISICAL_*` / `INFISICAL_*`, Universal Auth included) read from `env` (the environment
+ * `loadConfig` reads the bootstrap from), with the address from `GROW_SECRETS_ADDR` when set, and
+ * returns `client.provider` (the SecretsProvider for the configured project and environment).
+ * `client.secrets` is the raw secrets API module, not the provider.
  */
-export async function connectSecrets(
+export function connectSecrets(
   bootstrap: SecretsBootstrap,
-  _env: Readonly<Record<string, string | undefined>>,
+  env: Readonly<Record<string, string | undefined>>,
 ): Promise<SecretsConnection> {
   const overrides = bootstrap.addr === undefined ? {} : { url: bootstrap.addr };
-  const client = InfisicalClient.fromEnv(overrides);
-  const duck = client as unknown as WithSecrets;
-  const secrets = duck.secrets ?? duck.secretsProvider;
-  if (typeof secrets !== "function") {
-    await client.close();
-    throw new UnsupportedError("loadConfig: InfisicalClient has no secrets() provider");
-  }
-  return { provider: secrets.call(client), close: () => client.close() };
+  // Inside then(): an invalid configuration rejects the promise instead of throwing.
+  return Promise.resolve().then(() => {
+    const client = new InfisicalClient(InfisicalConfig.fromEnv(overrides, env));
+    return { provider: client.provider, close: () => client.close() };
+  });
 }

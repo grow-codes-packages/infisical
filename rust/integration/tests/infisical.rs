@@ -827,3 +827,50 @@ async fn secrets_provider() {
         )
         .await;
 }
+
+/// GRO-1410: `load_config()` with the default connector reads `GROW_SECRETS_PATH`. The address
+/// comes from `GROW_SECRETS_ADDR` (it wins over `GROW_INFISICAL_URL`), credentials, project and
+/// environment from the package variables of the same environment (Universal Auth).
+#[tokio::test]
+async fn load_config_through_the_connector() {
+    use sdk::secrets::{load_config, LoadOptions};
+    let f = setup();
+    let base = format!("lc-{}", f.run);
+    let p = f.c.secrets();
+    p.set(
+        &format!("{base}/svc/DATABASE_URL"),
+        "postgres://db".into(),
+        None,
+    )
+    .await
+    .unwrap();
+    p.set(&format!("{base}/svc/LOG_LEVEL"), "debug".into(), None)
+        .await
+        .unwrap();
+    let mut env: HashMap<String, String> = std::env::vars().collect();
+    env.insert("GROW_SECRETS_PROVIDER".into(), "infisical".into());
+    env.insert("GROW_SECRETS_ADDR".into(), must("GROW_INFISICAL_URL"));
+    env.insert("GROW_SECRETS_PATH".into(), format!("{base}/svc"));
+    env.insert("GROW_INFISICAL_URL".into(), "http://127.0.0.1:1".into());
+    let values = load_config(LoadOptions {
+        env: Some(env),
+        required: vec!["DATABASE_URL".into()],
+        into_env: false,
+        ..LoadOptions::default()
+    })
+    .await
+    .expect("load_config");
+    assert_eq!(values.len(), 2, "{:?}", values.keys().collect::<Vec<_>>());
+    assert_eq!(values["DATABASE_URL"], "postgres://db");
+    assert_eq!(values["LOG_LEVEL"], "debug");
+    let _ =
+        f.c.delete_folder(
+            &base,
+            Some(&DeleteFolderOptions {
+                path: Some("/".into()),
+                force: true,
+                ..Default::default()
+            }),
+        )
+        .await;
+}

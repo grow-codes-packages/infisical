@@ -56,6 +56,7 @@ import codes.grow.packages.infisical.core.PermissionDeniedException;
 import codes.grow.packages.infisical.core.Secret;
 import codes.grow.packages.infisical.core.UnsupportedException;
 import codes.grow.packages.infisical.core.ValidationException;
+import codes.grow.packages.infisical.secrets.ConfigLoader;
 import codes.grow.packages.infisical.secrets.DeleteOptions;
 import codes.grow.packages.infisical.secrets.EnvLoader;
 import codes.grow.packages.infisical.secrets.GetOptions;
@@ -610,5 +611,35 @@ class IntegrationTest {
       }
     }
     c.deleteFolder("prov-" + run, DeleteFolderOptions.builder().force(true).build());
+  }
+
+  /**
+   * GRO-1410: {@code ConfigLoader.load()} with the default connector reads {@code
+   * GROW_SECRETS_PATH}. The address comes from {@code GROW_SECRETS_ADDR} (it wins over {@code
+   * GROW_INFISICAL_URL}), credentials, project and environment from the package variables of the
+   * same environment (Universal Auth).
+   */
+  @Test
+  void loadConfigThroughTheConnector() {
+    String base = "lc-" + run;
+    ProjectSecretsProvider p = c.secrets();
+    p.set(base + "/svc/DATABASE_URL", "postgres://db");
+    p.set(base + "/svc/LOG_LEVEL", "debug");
+    Map<String, String> boot = new HashMap<>(env);
+    boot.put("GROW_SECRETS_PROVIDER", "infisical");
+    boot.put("GROW_SECRETS_ADDR", must("GROW_INFISICAL_URL"));
+    boot.put("GROW_SECRETS_PATH", base + "/svc");
+    boot.put("GROW_INFISICAL_URL", "http://127.0.0.1:1");
+    Map<String, String> written = new HashMap<>();
+    Map<String, String> values =
+        ConfigLoader.load(
+            ConfigLoader.LoadOptions.builder()
+                .env(boot)
+                .required("DATABASE_URL")
+                .target(written::put)
+                .build());
+    assertEquals(Map.of("DATABASE_URL", "postgres://db", "LOG_LEVEL", "debug"), values);
+    assertEquals("postgres://db", written.get("DATABASE_URL"));
+    c.deleteFolder(base, DeleteFolderOptions.builder().force(true).build());
   }
 }

@@ -287,14 +287,15 @@ pub async fn connect_secrets(
     env: HashMap<String, String>,
 ) -> Result<SecretsConnection> {
     // @sdk-kit:keep connector — service-owned body: build the client, log in, return the provider
-    // The package keeps its own variables (credentials, region/project); GROW_SECRETS_ADDR
-    // overrides the endpoint when set.
+    // The package keeps its own variables (GROW_INFISICAL_* incl. Universal Auth), read from the
+    // environment load_config was given; GROW_SECRETS_ADDR overrides the endpoint when set.
+    use crate::core::env::EnvReader;
     use crate::{InfisicalClient, InfisicalConfig};
     let mut builder = InfisicalConfig::builder();
     if let Some(addr) = &bootstrap.addr {
         builder = builder.url(addr.clone());
     }
-    let client = InfisicalClient::new(builder.build_from_env()?)?;
+    let client = InfisicalClient::new(builder.build_with_env(&EnvReader::from_map(env))?)?;
     let provider: Arc<dyn SecretsProvider> = Arc::new(client.secrets());
     let closer = client.clone();
     Ok(SecretsConnection {
